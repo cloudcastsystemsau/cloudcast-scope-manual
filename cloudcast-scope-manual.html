@@ -1,0 +1,2213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b0e11">
+<title>CloudCast Scope User Manual</title>
+<style>
+  :root {
+    /* instrument palette, lifted from widgets.rs so the page and the app agree */
+    --field:#090b0d; --panel:#14181c; --raised:#1b2026; --edge:#2f373f;
+    --grid:#303840; --grid-key:#56606c;
+    --trace-luma:#60f096; --trace-chroma:#aaebff;
+    --amber:#e2ac3e; --red:#e24e44;
+    --text:#ced6de; --text-dim:#848f9a; --text-faint:#5c656e;
+    /* semantic */
+    --color-bg:#0b0e11;
+    --color-surface:var(--panel);
+    --color-raised:var(--raised);
+    --color-border:var(--edge);
+    --color-accent:var(--trace-luma);
+    --color-link:var(--trace-chroma);
+    --color-text:var(--text);
+    --color-text-muted:var(--text-dim);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--color-bg); color: var(--color-text);
+    font: 15px/1.65 Arial, Helvetica, sans-serif;
+  }
+  .layout { display: flex; max-width: 1400px; margin: 0 auto; }
+  nav {
+    position: sticky; top: 0; align-self: flex-start;
+    width: 290px; flex: 0 0 290px; height: 100vh; overflow-y: auto;
+    padding: 26px 18px; border-right: 1px solid var(--color-border);
+  }
+  nav .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+  nav .brand .name {
+    font-weight: 700; letter-spacing: .12em; font-size: 16px;
+    color: var(--color-text); text-transform: uppercase;
+  }
+  nav .brand .sub {
+    color: var(--color-text-muted); font-size: 10px;
+    letter-spacing: 3px; text-transform: uppercase; margin-top: 3px;
+  }
+  nav a {
+    display: block; color: var(--color-text-muted); text-decoration: none;
+    padding: 4px 9px; border-radius: 5px; font-size: 12.5px; margin-bottom: 1px;
+  }
+  nav a:hover { color: var(--color-text); background: var(--color-surface); }
+  nav a.toc-h2 { margin-top: 6px; font-weight: 600; color: var(--color-text); }
+  nav a.toc-h3 { padding-left: 20px; font-size: 12px; }
+  nav a.toc-h4 { padding-left: 32px; font-size: 11.5px; }
+  main { flex: 1; min-width: 0; padding: 34px 46px 90px; }
+  h1 {
+    font-size: 24px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 5px; border-bottom: 1px solid var(--color-border);
+    padding-bottom: 16px;
+  }
+  h2 {
+    font-size: 21px; margin-top: 54px; padding-top: 18px;
+    border-top: 1px solid var(--color-border); color: var(--color-accent);
+  }
+  h3 {
+    font-size: 13px; margin-top: 30px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 2.5px; color: var(--color-text);
+  }
+  h4 {
+    font-size: 12px; margin-top: 24px; font-weight: 700;
+    letter-spacing: 1.5px; color: var(--trace-chroma);
+  }
+  a { color: var(--color-link); }
+  strong { color: #fff; }
+  img {
+    max-width: 100%; border: 1px solid var(--color-border); border-radius: 6px;
+    margin: 14px 0 6px; display: block; background: var(--field);
+    box-shadow: 0 6px 24px rgba(0,0,0,.5);
+  }
+  code {
+    background: var(--color-raised); border: 1px solid var(--color-border);
+    padding: 1.5px 6px; border-radius: 4px; font-size: 13px;
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  }
+  pre {
+    background: var(--field); border: 1px solid var(--color-border);
+    padding: 14px 18px; border-radius: 6px; overflow-x: auto;
+    font-size: 12.5px; line-height: 1.45;
+  }
+  pre code { background: none; border: none; padding: 0; font-size: inherit; }
+  table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 14px; }
+  th, td {
+    border: 1px solid var(--color-border); padding: 8px 12px;
+    text-align: left; vertical-align: top;
+  }
+  th {
+    background: var(--color-surface); font-size: 11.5px;
+    text-transform: uppercase; letter-spacing: 1.5px; color: var(--color-text);
+  }
+  tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+  blockquote {
+    margin: 16px 0; padding: 10px 18px; border-left: 3px solid var(--color-accent);
+    background: var(--color-surface); border-radius: 0 6px 6px 0;
+    color: var(--color-text-muted);
+  }
+  hr { border: none; border-top: 1px solid var(--color-border); margin: 38px 0; }
+  li { margin: 4px 0; }
+  em { color: var(--color-text-muted); }
+  .table-wrap, main > table { overflow-x: auto; }
+  @media (max-width: 900px) {
+    .layout { display: block; }
+    nav {
+      position: static; width: auto; height: auto;
+      border-right: none; border-bottom: 1px solid var(--color-border);
+    }
+    main { padding: 22px 18px 60px; }
+  }
+  @media print {
+    :root {
+      --color-bg:#ffffff; --color-surface:#f2f5f3; --color-raised:#f2f5f3;
+      --field:#f7f9f8; --color-border:#d5dcd8;
+      --color-text:#12181c; --color-text-muted:#3a444c;
+      --color-accent:#0f6b3d; --color-link:#0f5f6b;
+    }
+    nav { display: none; }
+    strong { color: #12181c; }
+    img { box-shadow: none; }
+    tr:nth-child(even) td { background: none; }
+    h2 { page-break-after: avoid; }
+    pre, table, img { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <div class="brand">
+    <svg viewBox="0 0 48 48" width="40" height="40" aria-hidden="true">
+<circle cx="24" cy="24" r="21" fill="#090b0d" stroke="#3a444e" stroke-width="1.5"/>
+<circle cx="24" cy="24" r="10.5" fill="none" stroke="#2b333b" stroke-width="1"/>
+<line x1="9" y1="33" x2="39" y2="15" stroke="#3a444e" stroke-width="1" stroke-dasharray="3 3"/>
+<line x1="12" y1="14" x2="36" y2="34" stroke="#3a444e" stroke-width="1" stroke-dasharray="3 3"/>
+<line x1="20" y1="24" x2="28" y2="24" stroke="#56606c" stroke-width="1.2"/>
+<line x1="24" y1="20" x2="24" y2="28" stroke="#56606c" stroke-width="1.2"/>
+<rect x="30" y="12.5" width="5" height="5" fill="none" stroke="#aaebff" stroke-width="1.2"/>
+<rect x="13" y="30.5" width="5" height="5" fill="none" stroke="#60f096" stroke-width="1.2"/>
+<circle cx="32.5" cy="15" r="1.6" fill="#aaebff"/>
+<circle cx="15.5" cy="33" r="1.6" fill="#60f096"/>
+</svg>
+    <div><div class="name">CloudCast Scope</div><div class="sub">User manual</div></div>
+  </div>
+  <a class="toc-h2" href="#1-what-cloudcast-scope-is">1. What CloudCast Scope is</a>
+<a class="toc-h3" href="#requirements">Requirements</a>
+<a class="toc-h3" href="#where-the-runtime-is-found">Where the runtime is found</a>
+<a class="toc-h2" href="#2-installing">2. Installing</a>
+<a class="toc-h3" href="#the-msi">The MSI</a>
+<a class="toc-h3" href="#unattended-installs">Unattended installs</a>
+<a class="toc-h3" href="#the-ndi-runtime-warning">The NDI runtime warning</a>
+<a class="toc-h3" href="#upgrading-and-uninstalling">Upgrading and uninstalling</a>
+<a class="toc-h2" href="#3-the-window-pane-by-pane">3. The window pane by pane</a>
+<a class="toc-h3" href="#title-bar">Title bar</a>
+<a class="toc-h3" href="#source-list-and-filter">Source list and filter</a>
+<a class="toc-h3" href="#bandwidth">Bandwidth</a>
+<a class="toc-h3" href="#picture-pane">Picture pane</a>
+<a class="toc-h3" href="#the-five-analysis-tabs">The five analysis tabs</a>
+<a class="toc-h3" href="#alarm-chips">Alarm chips</a>
+<a class="toc-h2" href="#4-scopes">4. Scopes</a>
+<a class="toc-h3" href="#waveform-monitor">Waveform monitor</a>
+<a class="toc-h3" href="#rgb-parade">RGB parade</a>
+<a class="toc-h3" href="#vectorscope">Vectorscope</a>
+<a class="toc-h3" href="#luma-histogram">Luma histogram</a>
+<a class="toc-h3" href="#what-correct-colour-bars-look-like">What correct colour bars look like</a>
+<a class="toc-h2" href="#5-video-measurements">5. Video measurements</a>
+<a class="toc-h3" href="#the-readout-table">The readout table</a>
+<a class="toc-h3" href="#colour-matrix-inference">Colour matrix inference</a>
+<a class="toc-h3" href="#gamut-tolerance">Gamut tolerance</a>
+<a class="toc-h2" href="#6-audio">6. Audio</a>
+<a class="toc-h3" href="#channel-meters">Channel meters</a>
+<a class="toc-h3" href="#peak-and-true-peak">Peak and true peak</a>
+<a class="toc-h3" href="#ebu-r128-loudness">EBU R128 loudness</a>
+<a class="toc-h3" href="#correlation">Correlation</a>
+<a class="toc-h3" href="#clipping">Clipping</a>
+<a class="toc-h3" href="#silence">Silence</a>
+<a class="toc-h3" href="#spectrum">Spectrum</a>
+<a class="toc-h2" href="#7-timing">7. Timing</a>
+<a class="toc-h3" href="#frame-rate-and-jitter">Frame rate and jitter</a>
+<a class="toc-h3" href="#av-sync">A/V sync</a>
+<a class="toc-h3" href="#timecode">Timecode</a>
+<a class="toc-h3" href="#dropped-frames">Dropped frames</a>
+<a class="toc-h3" href="#queue-depth-connections-and-bitrate">Queue depth connections and bitrate</a>
+<a class="toc-h2" href="#8-recording-and-offline-analysis">8. Recording and offline analysis</a>
+<a class="toc-h3" href="#what-a-recording-contains">What a recording contains</a>
+<a class="toc-h3" href="#making-a-measurement-run">Making a measurement run</a>
+<a class="toc-h3" href="#the-report-tab">The Report tab</a>
+<a class="toc-h4" href="#reading-a-report-a-starved-source">Reading a report: a starved source</a>
+<a class="toc-h3" href="#reading-the-analysis-report">Reading the analysis report</a>
+<a class="toc-h3" href="#the-arrival-interval-histogram">The arrival interval histogram</a>
+<a class="toc-h3" href="#the-pacer-simulation">The pacer simulation</a>
+<a class="toc-h3" href="#the-grace-sensitivity-table">The grace sensitivity table</a>
+<a class="toc-h4" href="#worked-example-a-well-clocked-source">Worked example: a well-clocked source</a>
+<a class="toc-h4" href="#worked-example-a-bursty-source">Worked example: a bursty source</a>
+<a class="toc-h4" href="#worked-example-a-real-source">Worked example: a real source</a>
+<a class="toc-h2" href="#9-scte-104">9. SCTE-104</a>
+<a class="toc-h3" href="#what-is-decoded">What is decoded</a>
+<a class="toc-h3" href="#the-two-rails">The two rails</a>
+<a class="toc-h3" href="#splice-fields">Splice fields</a>
+<a class="toc-h3" href="#absolute-timestamps">Absolute timestamps</a>
+<a class="toc-h2" href="#10-command-reference">10. Command reference</a>
+<a class="toc-h3" href="#flags">Flags</a>
+<a class="toc-h3" href="#examples">Examples</a>
+<a class="toc-h2" href="#11-scope-on-the-web">11. Scope on the web</a>
+<a class="toc-h3" href="#turning-it-on">Turning it on</a>
+<a class="toc-h3" href="#opening-it">Opening it</a>
+<a class="toc-h3" href="#dashboards-and-presets">Dashboards and presets</a>
+<a class="toc-h3" href="#picture-and-listen">Picture and listen</a>
+<a class="toc-h3" href="#discovery">Discovery</a>
+<a class="toc-h3" href="#who-can-reach-it">Who can reach it</a>
+<a class="toc-h3" href="#what-it-costs">What it costs</a>
+<a class="toc-h2" href="#12-troubleshooting">12. Troubleshooting</a>
+<a class="toc-h3" href="#no-sources-found">No sources found</a>
+<a class="toc-h3" href="#not-connected-or-no-picture">Not connected or no picture</a>
+<a class="toc-h3" href="#connected-but-no-frames-arrive">Connected but no frames arrive</a>
+<a class="toc-h3" href="#high-dropped-audio-counts">High dropped audio counts</a>
+<a class="toc-h3" href="#unexpected-gamut-alarms">Unexpected GAMUT alarms</a>
+<a class="toc-h3" href="#unexpected-clip-alarms">Unexpected CLIP alarms</a>
+<a class="toc-h3" href="#measurements-look-wrong-on-lowest-bandwidth">Measurements look wrong on Lowest bandwidth</a>
+</nav>
+<main>
+<h1>CloudCast Scope User Manual</h1>
+<p><strong>CloudCast Scope</strong> is a signal monitor and analyser for NDI®. It connects to a
+source on the network and measures it the way a rack of broadcast test gear
+would: picture, waveform, RGB parade, vectorscope, luma histogram, per-channel
+audio metering, EBU R128 loudness, stream timing, and SCTE-104 cue decoding.</p>
+<p>It also does one thing a rack of test gear cannot. It can <strong>record the arrival
+time of every frame</strong> to a file and replay that file offline through a
+downstream pacer&#39;s rules, which is how you tell the difference between a source
+that is losing frames and a source that is delivering them in bursts. Those two
+faults look identical on a dropped-frame counter and completely different
+downstream. That is <a href="#8-recording-and-offline-analysis">§8</a>, and it is the
+reason this tool exists.</p>
+<p>One native binary, and no service to install. The same analysis runs from the
+GUI, from a headless <code>--probe</code> over SSH, and offline from <code>--analyse</code> — and,
+when you turn it on, from a browser on your network (<a href="#11-scope-on-the-web">§11</a>).</p>
+<blockquote>
+<p>NDI® is a registered trademark of Vizrt NDI AB; CloudCast Scope is not
+affiliated with or endorsed by Vizrt; it contains no NDI SDK code and uses the
+separately-installed NDI Runtime.</p>
+</blockquote>
+<p>© Cloudcast Systems PTY LTD. Licensed MIT.</p>
+<hr>
+<h2 id="1-what-cloudcast-scope-is">1. What CloudCast Scope is</h2>
+<p>A confidence and fault-finding monitor for NDI sources. Point it at a source and
+it tells you, continuously and numerically:</p>
+<ul>
+<li>whether the picture is legal (levels, gamut), present (black, freeze) and
+sharp;</li>
+<li>whether the audio is present, in phase, clipping, and at what loudness;</li>
+<li>whether the frames are arriving at the rate and the <em>spacing</em> the sender
+claims;</li>
+<li>whether any SCTE-104 cues are riding in the metadata, and what they say.</li>
+</ul>
+<p>Everything it measures, it measures from the <strong>full-resolution frame</strong>. The
+picture on screen is downscaled for cheap texture upload; no measurement is ever
+taken from that downscale.</p>
+<p>The same analysis is reachable three ways:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Command</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GUI</td>
+<td><code>cloudcast-scope</code></td>
+<td>Sit and watch. Scopes, meters, alarms — and timed measurement runs that analyse themselves (<a href="#making-a-measurement-run">§8</a>).</td>
+</tr>
+<tr>
+<td>Headless probe</td>
+<td><code>cloudcast-scope --probe &quot;Camera 1&quot; --seconds 30</code></td>
+<td>Scripts, cron, SSH. Prints the same numbers and exits.</td>
+</tr>
+<tr>
+<td>Offline</td>
+<td><code>cloudcast-scope --analyse capture.jsonl</code></td>
+<td>Read back a recording made earlier (<a href="#8-recording-and-offline-analysis">§8</a>).</td>
+</tr>
+</tbody></table>
+<h3 id="requirements">Requirements</h3>
+<ul>
+<li><strong>The NDI Runtime, version 5 or 6.</strong> This is <em>not</em> the NDI SDK. CloudCast
+Scope contains no SDK code; it loads the runtime library at process start.
+The runtime ships with <a href="https://ndi.video/tools/">NDI Tools</a> and with most
+NDI-aware applications, so a machine that already runs NDI Studio Monitor,
+a switcher or an encoder almost certainly has it.</li>
+<li><strong>Windows x64</strong> for the supplied MSI. The code itself is portable; the
+installer is not.</li>
+<li>Nothing else. No .NET, no browser, no service account, no firewall rule —
+Scope only makes outbound NDI connections and receives on the ephemeral ports
+the NDI runtime&#39;s own discovery already accounts for.</li>
+</ul>
+<p>Without the runtime the application will not start: it exits with
+<code>NDI runtime not found. Install the NDI Runtime or NDI Tools. Tried: …</code>
+followed by every path it looked in.</p>
+<h3 id="where-the-runtime-is-found">Where the runtime is found</h3>
+<p>At start-up, in this order, until one loads:</p>
+<ol>
+<li><code>%NDI_RUNTIME_DIR_V6%\Processing.NDI.Lib.x64.dll</code></li>
+<li><code>%NDI_RUNTIME_DIR_V5%\…</code>, then <code>%NDI_RUNTIME_DIR_V4%\…</code></li>
+<li><code>C:\Program Files\NDI\NDI 6 Tools\Runtime\…</code></li>
+<li><code>C:\Program Files\NDI\NDI 6 Runtime\v6\…</code></li>
+<li><code>C:\Program Files\NDI\NDI 5 Tools\Runtime\…</code></li>
+<li><code>C:\Program Files\NDI\NDI 5 Runtime\v5\…</code></li>
+<li><code>Processing.NDI.Lib.x64.dll</code> on the default search path (next to the
+executable, then <code>PATH</code>).</li>
+</ol>
+<p>The environment variables are checked first deliberately: the NDI Tools
+installer drops the DLL in its own directory and advertises it through
+<code>NDI_RUNTIME_DIR_V*</code> but does <strong>not</strong> add that directory to <code>PATH</code>, so probing
+by library name alone misses it.</p>
+<hr>
+<h2 id="2-installing">2. Installing</h2>
+<h3 id="the-msi">The MSI</h3>
+<p><code>CloudCastScope-&lt;version&gt;.msi</code> is a per-machine, Authenticode-signed installer.
+It installs:</p>
+<ul>
+<li><code>cloudcast-scope.exe</code> into
+<strong><code>C:\Program Files\Cloudcast Systems\CloudCast Scope</code></strong>;</li>
+<li><code>License.rtf</code> beside it, so the licence travels with the install;</li>
+<li>a <strong>Start Menu</strong> shortcut named <em>CloudCast Scope</em>, flat in the root rather
+than inside a one-item folder;</li>
+<li>optionally a <strong>desktop</strong> shortcut — off by default, see below.</li>
+</ul>
+<p>There is no service, no scheduled task and no firewall exception. The install
+directory is changeable on the <em>Destination Folder</em> page of the standard
+installer UI.</p>
+<h3 id="unattended-installs">Unattended installs</h3>
+<pre><code>msiexec /i CloudCastScope-0.1.0.msi /qn
+msiexec /i CloudCastScope-0.1.0.msi INSTALLDESKTOPSHORTCUT=1 /qn
+</code></pre>
+<p><code>INSTALLDESKTOPSHORTCUT=1</code> is the only property worth setting. It is off by
+default because a per-machine install writes to the <strong>All Users</strong> desktop, and
+imaging a fleet should not silently litter every profile. The choice is
+remembered in <code>HKLM\SOFTWARE\Cloudcast Systems\CloudCast Scope</code> and honoured on
+later upgrades — MSI properties do not survive a major upgrade, so without that
+breadcrumb every upgrade would quietly drop a shortcut somebody had asked for.</p>
+<h3 id="the-ndi-runtime-warning">The NDI runtime warning</h3>
+<p>The installer looks for the NDI Runtime but <strong>never blocks on it</strong>. Staging
+boxes are routinely imaged with applications first and NDI Tools afterwards, and
+an operator who hits a hard launch condition has no way to proceed. So the
+installer detects, records and warns, and succeeds either way.</p>
+<p>Two independent signals are checked, because NDI&#39;s own installers have moved the
+runtime around across versions:</p>
+<ol>
+<li>The machine-wide <code>NDI_RUNTIME_DIR_V6</code> / <code>NDI_RUNTIME_DIR_V5</code> values, read out
+of the registry hive that backs the machine environment block rather than by
+expanding <code>%VAR%</code> — the installer process inherited its environment before
+the NDI installer ever ran, so an expansion would go stale on a same-session
+install.</li>
+<li>The two well-known directories under the native <code>Program Files</code>:
+<code>NDI\NDI 6 Runtime\v6</code> and <code>NDI\NDI 6 Tools\Runtime</code>.</li>
+</ol>
+<p>If neither is found, the <strong>final page of an attended install</strong> carries:</p>
+<blockquote>
+<p>Note: the NDI Runtime was not detected on this machine. CloudCast Scope is
+installed, but it will not start until the NDI Runtime (version 5 or 6) is
+installed. Get it from ndi.video/tools, then run CloudCast Scope again.</p>
+</blockquote>
+<p>A silent install has no UI to warn into, so the result is recorded as the
+property <code>NDIRUNTIMEFOUND</code>. To see it, log the install:</p>
+<pre><code>msiexec /i CloudCastScope-0.1.0.msi /qn /l*v scope-install.log
+</code></pre>
+<p>and search the log for <code>NDIRUNTIMEFOUND</code>. Its absence means the check found
+nothing.</p>
+<h3 id="upgrading-and-uninstalling">Upgrading and uninstalling</h3>
+<p>Installing a newer MSI replaces the existing install in place. Installing an
+<strong>older</strong> one over a newer one is refused with a message telling you to uninstall
+first — this is deliberate, not a bug. Uninstall from Settings → Apps, or
+<code>msiexec /x CloudCastScope-0.1.0.msi /qn</code>.</p>
+<hr>
+<h2 id="3-the-window-pane-by-pane">3. The window pane by pane</h2>
+<p><img src="img/01-window.png" alt="The CloudCast Scope window connected to a colour-bar source"></p>
+<p>Four regions: a title bar across the top, the source list down the left, the
+picture in the centre, and the analysis tabs down the right. The left and right
+panels are draggable.</p>
+<h3 id="title-bar">Title bar</h3>
+<p>Left to right:</p>
+<ul>
+<li><strong>Connection dot</strong> — dark grey when nothing is selected; <strong>amber</strong> when a
+source is selected but no sender is currently connected; <strong>green</strong> once at
+least one connection is up.</li>
+<li><strong>Source name</strong>, exactly as NDI advertises it, e.g.
+<code>DESKTOP-7HGO8C6 (Airlock Test Pattern)</code>.</li>
+<li><strong>Format line</strong>, once video has arrived:
+<code>960x540p 25.000 · UYVY · BT.601 · 48000 Hz 2 ch</code> — raster, <code>p</code>/<code>i</code>, frame
+rate to three decimals, the pixel FourCC actually delivered, the assumed
+colour matrix (<a href="#colour-matrix-inference">§5</a>), then the audio sample rate and
+channel count.</li>
+<li><strong>Alarm chips</strong>, right-aligned — see <a href="#alarm-chips">below</a>.</li>
+<li><strong>Measure</strong>, with a <strong>duration</strong> dropdown beside it — <code>10 s</code>, <code>30 s</code> (the
+default), <code>1 min</code>, <code>5 min</code>, <code>15 min</code> or <code>Continuous</code>. Pressing it starts a
+timed measurement run; the button area then becomes <code>■ Stop</code> alongside the
+elapsed and total time (<code>0:12 / 0:30</code>), the frame count so far, and a progress
+bar. The run ends itself when the time is up, and the result appears in the
+<strong>Report</strong> tab (<a href="#making-a-measurement-run">§8</a>).</li>
+<li><strong>Picture</strong> checkbox — hides the centre pane. Analysis continues; only the
+texture upload stops.</li>
+<li><strong>Reset stats</strong> — zeroes the analysis counters: received frame counts,
+timecode discontinuities, clip counts, integrated loudness and LRA, the
+decoded cue list, the freeze reference and the scope textures. It does not
+disconnect. It also <strong>re-baselines the dropped counts</strong>: the receiver&#39;s own
+performance counters keep running, but Scope takes a new baseline from them on
+the next poll and reports the difference, so the displayed figure means
+<em>dropped since the last reset or reconnect</em> rather than <em>since the receiver was
+created</em>. A reconnect restarts the receiver&#39;s counters from zero, which Scope
+detects and re-baselines against, so the figure reads 0 rather than going
+negative.</li>
+</ul>
+<h3 id="source-list-and-filter">Source list and filter</h3>
+<p>Discovery runs continuously in its own thread for the whole session, so the list
+updates without any action. The number to the right of <strong>Sources</strong> is the count
+currently advertised. The <strong>filter</strong> box is a case-insensitive substring match on
+the full NDI name — typing <code>dec</code> finds <code>DESKTOP-7HGO8C6 (Decoder)</code>.</p>
+<p>Click a name to connect. Clicking the already-connected name does nothing.
+<strong>Disconnect</strong> tears the receiver down and clears the snapshot.</p>
+<p>An empty list shows <em>Discovering…</em> — that is the normal state for the first
+second or two, and a persistent state means a discovery problem
+(<a href="#no-sources-found">§11</a>).</p>
+<h3 id="bandwidth">Bandwidth</h3>
+<p>Three radio buttons, and this choice matters more than it looks:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>What arrives</th>
+<th>Analysis validity</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Highest (full analysis)</strong></td>
+<td>The full-resolution feed.</td>
+<td>Everything is valid. This is the default.</td>
+</tr>
+<tr>
+<td><strong>Lowest (proxy)</strong></td>
+<td>NDI&#39;s ~640×360 proxy stream.</td>
+<td><strong>Video measurements are not of the real feed.</strong></td>
+</tr>
+<tr>
+<td><strong>Audio only</strong></td>
+<td>No video at all.</td>
+<td>Audio and audio timing only.</td>
+</tr>
+</tbody></table>
+<p><code>Lowest</code> requests a separately-encoded proxy — a different raster, re-encoded,
+with its own chroma handling. Gamut counts, sharpness, luma statistics and every
+scope then describe <em>the proxy</em>, not the signal you care about. Worse, the proxy
+raster is 360 lines, which flips the colour-matrix inference to BT.601 even for
+an HD source (<a href="#colour-matrix-inference">§5</a>). Measuring a proxy and reporting it
+as the feed would be worse than not measuring at all, so selecting it puts a
+standing amber warning under the radio buttons:
+<em>Proxy — video measurements are not of the real feed.</em></p>
+<p>Bandwidth is fixed when the receiver is created, so changing it <strong>reconnects</strong>.
+The scopes and picture clear, and cumulative counters restart.</p>
+<h3 id="picture-pane">Picture pane</h3>
+<p>The decoded frame, letterboxed into the available space — never stretched. A
+monitor that lies about aspect ratio is worse than no monitor.</p>
+<p>The picture is a nearest-neighbour downscale (longest edge 960 px) converted
+with the <em>display</em> conversion, which includes the usual 255/219 expansion of
+studio swing to full range. That is correct for a screen and wrong for a
+legality test, which is why the gamut check in
+<a href="#5-video-measurements">§5</a> uses a different conversion on the full-resolution
+frame.</p>
+<p>Placeholder text: <em>Select a source</em>, <em>Waiting for video…</em>, or <em>Picture hidden</em>.</p>
+<h3 id="the-five-analysis-tabs">The five analysis tabs</h3>
+<table>
+<thead>
+<tr>
+<th>Tab</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Scopes</strong></td>
+<td>Waveform, vectorscope, RGB parade, luma histogram, and the video readout table. <a href="#4-scopes">§4</a>, <a href="#5-video-measurements">§5</a></td>
+</tr>
+<tr>
+<td><strong>Audio</strong></td>
+<td>Per-channel meters, R128 loudness readouts and LU bar, correlation meter, spectrum. <a href="#6-audio">§6</a></td>
+</tr>
+<tr>
+<td><strong>Timing</strong></td>
+<td>The timing grid, the inter-frame jitter plot, and receiver state (timecode presence, connections, queue depth). <a href="#7-timing">§7</a></td>
+</tr>
+<tr>
+<td><strong>SCTE</strong></td>
+<td>Decoded cues, newest first. The tab label carries the count once any have been seen: <code>SCTE (3)</code>. <a href="#9-scte-104">§9</a></td>
+</tr>
+<tr>
+<td><strong>Report</strong></td>
+<td>The analysis of the most recent measurement run: a coloured verdict headline, the key figures, and the full text report with a <strong>Copy report</strong> button. Reads <em>No measurement run yet.</em> until the first run has finished. <a href="#the-report-tab">§8</a></td>
+</tr>
+</tbody></table>
+<h3 id="alarm-chips">Alarm chips</h3>
+<p>The chips only appear while connected, and only when something is actually
+wrong. When nothing is, a single green <strong>OK</strong> shows instead. Exactly what lights
+each one:</p>
+<table>
+<thead>
+<tr>
+<th>Chip</th>
+<th>Colour</th>
+<th>Lit when</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>BLACK</strong></td>
+<td>red</td>
+<td>The frame&#39;s maximum luma is ≤ 20. Not &quot;dark&quot; — <em>no pixel anywhere above code 20</em>.</td>
+</tr>
+<tr>
+<td><strong>FROZEN</strong></td>
+<td>red</td>
+<td>Mean absolute luma difference against the previous frame is below 0.05, measured on a 128×128 grid. Live video, even a locked-off camera on a static scene, carries enough sensor noise to clear this; a repeated buffer sits at exactly 0.</td>
+</tr>
+<tr>
+<td><strong>DROPS</strong></td>
+<td>red</td>
+<td>The dropped-frame count is non-zero for video <strong>or</strong> audio, measured since the last <strong>Reset stats</strong> or reconnect. Press <strong>Reset stats</strong> and watch whether it climbs again — a static count is history, a climbing one is happening now.</td>
+</tr>
+<tr>
+<td><strong>SILENCE</strong></td>
+<td>amber</td>
+<td>Any channel has stayed below −60 dBFS for 2 seconds.</td>
+</tr>
+<tr>
+<td><strong>CLIP</strong></td>
+<td>amber</td>
+<td>Any channel&#39;s cumulative clip count is above zero. Read <a href="#clipping">§6 Clipping</a> before treating this as a fault.</td>
+</tr>
+<tr>
+<td><strong>PHASE</strong></td>
+<td>amber</td>
+<td>Correlation between channels 1 and 2 is below −0.5.</td>
+</tr>
+<tr>
+<td><strong>A/V SYNC</strong></td>
+<td>amber</td>
+<td>The audio and video timestamps differ by more than 40 ms in either direction.</td>
+</tr>
+<tr>
+<td><strong>GAMUT</strong></td>
+<td>amber</td>
+<td>Out-of-gamut pixels exceed 0.1 % of the raster (minimum 64 pixels).</td>
+</tr>
+</tbody></table>
+<p>The GAMUT chip is thresholded while the <em>count</em> in the readout table stays
+exact, and that asymmetry is deliberate: 4:2:2 chroma is shared across pixel
+pairs, so every hard colour transition produces a handful of genuinely
+out-of-gamut edge pixels. A clean colour-bar frame measures a few hundred of
+them. An alarm that fires on those is lit permanently, which is the same as
+having no alarm.</p>
+<hr>
+<h2 id="4-scopes">4. Scopes</h2>
+<p><img src="img/02-scopes-tab.png" alt="The Scopes tab"></p>
+<p>All four instruments are 8-bit code-value displays with the same graticule
+convention: <strong>16</strong> and <strong>235</strong> are the legal rails and are drawn brighter than
+the other lines; the regions outside them are tinted faintly red.</p>
+<p>Trace brightness is <strong>logarithmic in density</strong> with a floor, so a single-sample
+trace is still visible next to a bar carrying a hundred thousand samples.</p>
+<p>The waveform, parade and vectorscope are fed from a subsampled grid capped at
+200 000 samples per frame (at 1080p that is a stride of 4 in both axes, about
+130 000 samples — already far denser than a 256-wide scope can resolve). The
+luma histogram and every number in the readout table are computed over <strong>every
+pixel</strong>.</p>
+<h3 id="waveform-monitor">Waveform monitor</h3>
+<p>Luma against horizontal position. X is the column across the raster, Y is the
+luma code with 0 at the bottom and 255 at the top. Graticule at 0 / 16 / 128 /
+235 / 255.</p>
+<p>The header on the right reads <code>min N max N mean N</code> and turns <strong>amber</strong> whenever
+the frame contains any sub-black or super-white pixels — so the numeric warning
+and the visual one appear together.</p>
+<p>What to look for:</p>
+<ul>
+<li>A trace pressed flat against the bottom rail: crushed blacks, or black.</li>
+<li>A trace flat-topped at 235: clipped whites. Above 235 and it is illegal.</li>
+<li>A trace that drifts as a whole between frames: unstable pedestal upstream.</li>
+<li>Sudden vertical structure at one column: a hard edge, a caption or a burn-in.</li>
+</ul>
+<h3 id="rgb-parade">RGB parade</h3>
+<p>The same waveform three times — R, G and B side by side, each tinted with its
+own primary, each with the same 16/235 graticule. This is where a colour cast
+shows: on a neutral grey ramp the three traces should sit at the same heights.
+One channel riding higher at the black end is a lift on that channel; one
+clipping earlier at the top is a gain error.</p>
+<p>The bottom-right corner reads <code>RGB PARADE</code> normally and switches to a red
+<code>ILLEGAL n</code> — the exact out-of-gamut pixel count — whenever that count is above
+zero.</p>
+<h3 id="vectorscope">Vectorscope</h3>
+<p><img src="img/03-vectorscope.png" alt="Vectorscope with 75% bar targets"></p>
+<p>Chroma plotted as Cb across against Cr up, on a circular field. The centre is
+neutral (128, 128) and the outer circle is 128 code values from centre, so the
+whole 0–255 chroma range is on screen. The dashed lines are the <strong>I</strong> axis (123°
+from +Cb) and the <strong>Q</strong> axis perpendicular to it, and there is a small crosshair
+at the centre.</p>
+<p>The six labelled boxes — <strong>R, MG, B, CY, G, YL</strong> — are the targets for <strong>75%
+colour bars encoded to Rec.709</strong>, computed from
+<code>Cb = 128 + 224(B′−Y′)/1.8556</code> and <code>Cr = 128 + 224(R′−Y′)/1.5748</code> with each
+primary at 0.75.</p>
+<p>Reading a source that misses them:</p>
+<ul>
+<li><strong>Dots land in the boxes.</strong> A 75% Rec.709 bar signal, correctly encoded.
+Nothing to do.</li>
+<li><strong>Dots land short of the boxes, on the right angles.</strong> Under-saturated —
+either genuinely (a camera, a graphic) or because the bars are 75% amplitude
+through a gain error. The <em>angles</em> are hue; the <em>radii</em> are saturation.</li>
+<li><strong>Dots land past the boxes.</strong> Over-saturated. Check the RGB parade and the
+illegal-pixel count: over-saturation is the usual cause of a gamut failure.</li>
+<li><strong>Every dot rotated by the same amount.</strong> A hue shift, which is what a chroma
+phase error looks like.</li>
+<li><strong>Dots sit on the right hues but consistently off-radius, and the source is
+SD or a proxy.</strong> This is normal and is not a fault: the targets are Rec.709,
+and a source at 576 lines or fewer is decoded as BT.601
+(<a href="#colour-matrix-inference">§5</a>). Its bars land in the right sectors but not
+in the boxes. The figure above shows exactly this — a 960×540 source, so
+BT.601, so the trace does not sit on the 709 targets.</li>
+<li><strong>A single blob at the centre and nothing else.</strong> Monochrome — either a
+genuinely grey picture, or chroma has been lost upstream.</li>
+</ul>
+<h3 id="luma-histogram">Luma histogram</h3>
+<p>Occurrences of each of the 256 luma codes across the whole frame, on a
+logarithmic height scale (a broadcast histogram is unreadable linearly once one
+code — black, usually — dominates). Bars below 16 and above 235 are drawn red;
+the rest are green. Ticks at 0 / 16 / 128 / 235 / 255.</p>
+<p>This is the fastest way to see quantisation damage: a comb pattern of empty bins
+between populated ones means the signal has been through a narrow bit depth or a
+level stretch somewhere upstream.</p>
+<h3 id="what-correct-colour-bars-look-like">What correct colour bars look like</h3>
+<p>For 75% bars — the standard confidence signal — expect all four instruments to
+agree:</p>
+<ul>
+<li><strong>Waveform:</strong> eight discrete flat plateaus, descending left to right. The
+white bar sits at <strong>180</strong> (75 % of the 16–235 excursion), the black bar at
+<strong>16</strong>. Nothing above 180, nothing below 16, and the plateaus are flat, not
+sloped.</li>
+<li><strong>Parade:</strong> the same eight columns in each of R, G and B, each channel either
+at 180 or at 16 for each bar, giving the familiar descending staircase in R,
+the two-step pattern in G and the alternating pattern in B.</li>
+<li><strong>Vectorscope:</strong> six tight dots, one per chromatic bar, plus a dot at the
+centre for the white and black bars. On a Rec.709 HD source they sit inside
+the target boxes.</li>
+<li><strong>Histogram:</strong> eight spikes and essentially nothing between them.</li>
+<li><strong>Readouts:</strong> <code>Luma min / max</code> = <code>16 / 180</code>, <code>Sub-black px</code> = 0,
+<code>Super-white px</code> = 0, <code>Illegal RGB px</code> a few hundred at most (the 4:2:2 edge
+pixels described in <a href="#alarm-chips">§3</a>), <code>Frame difference</code> small but non-zero
+if the pattern carries a clock or animation.</li>
+</ul>
+<p>Anything else on a bar signal is a fault in the path, not in the bars.</p>
+<hr>
+<h2 id="5-video-measurements">5. Video measurements</h2>
+<h3 id="the-readout-table">The readout table</h3>
+<p><img src="img/04-video-readouts.png" alt="The video readout table"></p>
+<p>Under the scopes, on the same tab. Values in red are out of spec.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Definition</th>
+<th>What a bad value looks like</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Luma min / max</strong></td>
+<td>Lowest and highest luma code present anywhere in the frame, from the full 256-bin histogram. For 4:2:2 this is Y straight off the wire; for RGB formats it is computed with the matrix&#39;s luma weights.</td>
+<td><code>0 / 255</code> on a camera feed: full-range content on a studio-range path. <code>16 / 16</code>: black.</td>
+</tr>
+<tr>
+<td><strong>Luma mean</strong></td>
+<td>Mean luma over every pixel.</td>
+<td>Drifting steadily between frames: an unstable pedestal or auto-exposure hunting.</td>
+</tr>
+<tr>
+<td><strong>Sub-black px</strong></td>
+<td>Count of pixels with Y &lt; 16. <strong>No tolerance</strong> — Y is read straight off the wire with no matrix in the path, so there is no rounding to forgive.</td>
+<td>Any non-zero count on a properly legalised feed. A few thousand on a noisy camera in deep shadow is common and benign; a fifth of the raster is a level error.</td>
+</tr>
+<tr>
+<td><strong>Super-white px</strong></td>
+<td>Count of pixels with Y &gt; 235. Same, no tolerance.</td>
+<td>Non-zero on graphics or titles usually means full-range assets pasted into a studio-range path.</td>
+</tr>
+<tr>
+<td><strong>Illegal RGB px</strong></td>
+<td>Count of pixels whose derived R′, G′ or B′ falls outside 16…235, <strong>± a 3-code tolerance</strong> (<a href="#gamut-tolerance">below</a>).</td>
+<td>A few hundred on a clean bar frame is expected. Tens of percent of the raster is either a genuine gamut fault or a matrix mismatch (<a href="#colour-matrix-inference">below</a>).</td>
+</tr>
+<tr>
+<td><strong>Frame difference</strong></td>
+<td>Mean absolute luma delta against the previous frame, over a fixed 128×128 nearest-neighbour grid, on a 0…255 scale.</td>
+<td>Exactly <code>0.000</code> for more than a frame: the picture is frozen. The first frame after connecting, and the first after any resolution change, always reports 0.000 because there is nothing to compare against — that is why the FROZEN chip needs two frames to light.</td>
+</tr>
+<tr>
+<td><strong>Sharpness</strong></td>
+<td>Mean absolute horizontal luma gradient: the average of |Y[x] − Y[x−1]| over every adjacent pair in the frame.</td>
+<td>A flat field is exactly 0. One-pixel black/white stripes exceed 100. There is no absolute &quot;good&quot; figure — watch it <em>relative to itself</em>: a live feed that drops by half has gone soft (focus, or a soft upscale has appeared in the path).</td>
+</tr>
+<tr>
+<td><strong>Letterbox t/b</strong></td>
+<td>Count of entirely black rows at the top and at the bottom. A row counts as black when its brightest pixel is ≤ 20.</td>
+<td>Non-zero when you expected full-height content: the source is letterboxed. A wholly black frame reports its whole height as the top border and 0 as the bottom, rather than double-counting the same rows.</td>
+</tr>
+<tr>
+<td><strong>Pillarbox l/r</strong></td>
+<td>The same for entirely black columns at the left and right edges.</td>
+<td>Non-zero on 16:9 content: 4:3 material in a 16:9 raster.</td>
+</tr>
+<tr>
+<td><strong>Aspect ratio</strong></td>
+<td>The picture aspect ratio the sender declares, to four decimals.</td>
+<td><code>1.7778</code> for 16:9, <code>1.3333</code> for 4:3. A value that disagrees with <code>width/height</code> means non-square pixels — check before blaming a scaler.</td>
+</tr>
+</tbody></table>
+<p>Alpha range and transparency are measured too (the analysis library reports
+<code>alpha_min</code>, <code>alpha_max</code> and a transparency flag for BGRA/RGBA sources), but
+they are not shown in this table. Formats without a meaningful alpha channel
+report fully opaque rather than reporting the padding byte.</p>
+<h3 id="colour-matrix-inference">Colour matrix inference</h3>
+<p>The title bar shows <strong>BT.601</strong> or <strong>BT.709</strong>. It is displayed because it is an
+<strong>inference</strong>, not something the sender told us.</p>
+<p>NDI carries no colorimetry flag. There is nowhere in the frame header that says
+which Y′CbCr matrix the sender encoded with, so the matrix has to be guessed,
+and the universal convention is by raster height:</p>
+<table>
+<thead>
+<tr>
+<th>Raster height</th>
+<th>Matrix assumed</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>≤ 576 lines</td>
+<td><strong>BT.601</strong> (covers 480i, 576i, and the sub-SD rasters NDI proxies produce)</td>
+</tr>
+<tr>
+<td>&gt; 576 lines</td>
+<td><strong>BT.709</strong></td>
+</tr>
+</tbody></table>
+<p>Getting this wrong is not cosmetic. Decoding a 601-encoded frame with the 709
+inverse pushes every saturated colour well outside the legal box: in the
+regression test that pins this behaviour, a clean 960×540 bar signal decoded on
+the wrong matrix flags <strong>more than a quarter of the entire raster</strong> as illegal,
+while the same bytes on the right matrix flag under 1 %. A clean signal reads as
+massively out of gamut, and the operator goes hunting for a fault that is not
+there.</p>
+<p>So: if you see a large gamut count, <strong>check the matrix in the title bar against
+what you know the source to be</strong> before anything else. The two cases that break
+the convention are a sub-576-line source that is really 709 (a downscaled HD
+feed), and a proxy stream — which is why <code>Lowest</code> bandwidth invalidates the
+gamut figure twice over.</p>
+<h3 id="gamut-tolerance">Gamut tolerance</h3>
+<p>The illegal-RGB test allows <strong>3 code values</strong> of slack outside 16…235 — i.e. it
+flags a pixel only when a derived component falls outside 13…238. That tolerance
+is an error budget, not a fudge.</p>
+<p>A colour sitting exactly on a rail — which every saturated colour bar does —
+cannot survive the round trip through 8-bit 4:2:2 without landing a code either
+side of it. The chroma pair is quantised to 8 bits, shared between two pixels,
+and senders commonly <strong>truncate rather than round</strong> when packing it. A real NDI
+colour-bar source measured during development encodes Cb as 43.67 and stores 43;
+that 0.67-code error alone puts B′ on 14.9 where the true value is 16.</p>
+<p>With zero tolerance, that wholly legal frame reads as roughly <strong>58 % out of
+gamut</strong> — worse than not measuring at all.</p>
+<p>The size comes from the arithmetic. Decoded <code>R′ = Y + k·(C − 128)</code>, so the error
+is <code>εY + k·εC + ε_fixedpoint</code>. A truncating sender contributes up to −1 code on
+each of Y and C, the fixed-point conversion up to −1 more, and the largest
+inverse coefficient is 1.73 (BT.601 Cb→B′). Worst case ≈ −3.7; the real source
+measured reaches −2. Three codes covers observed reality with margin while
+staying far below a genuine gamut fault, which runs to tens of codes. Real
+legalisers carry a tolerance for exactly this reason.</p>
+<p>The tolerance is deliberately <strong>not</strong> applied to the sub-black and super-white
+luma counts, which read Y off the wire with no matrix and no subsampling in the
+path.</p>
+<p>One more thing about the derivation: the conversion used for the gamut test
+omits the 255/219 (1.164) luma gain that a <em>display</em> conversion carries. With
+that gain, a perfectly legal Y = 16 black would map to R′G′B′ = 0 and the whole
+frame would flag. A gamut check wants the un-expanded R′G′B′, where legal video
+stays inside 16…235 exactly as the luma does.</p>
+<hr>
+<h2 id="6-audio">6. Audio</h2>
+<p>The Audio tab carries the channel meters, the R128 readouts and LU bar, the
+correlation meter and the spectrum. Analysis adapts automatically to the
+sender&#39;s channel count and sample rate — including 44.1 kHz and 96 kHz, which
+NDI senders emit freely.</p>
+<p><em>A figure of the Audio tab is not included in this revision; see the note at the
+end of <a href="#12-troubleshooting">§11</a>.</em></p>
+<h3 id="channel-meters">Channel meters</h3>
+<p>One bar per channel, scaled 0 to −60 dBFS with key graticule lines at 0 and −18.
+Each bar carries four things:</p>
+<ul>
+<li><strong>Banded RMS fill</strong> — green below −18, amber from −18 to −6, red above −6.
+RMS is measured over the window since the previous meter update (~50 ms).</li>
+<li><strong>Sample-peak line</strong> — a solid line at the highest absolute sample in that
+window.</li>
+<li><strong>Peak-hold tick</strong> — a white tick that holds the highest peak for 1.5 s, then
+falls at 22 dB/s.</li>
+<li><strong>Clip box</strong> — the small box above the bar, latching red for 2.5 s each time
+the clip count rises.</li>
+</ul>
+<p>Under each bar: the channel number, then the peak value in dBFS, or <strong>MUTE</strong>
+when the channel is flagged silent (in which case the whole bar dims). The
+channel number turns <strong>amber</strong> when that channel&#39;s DC offset exceeds ±0.01 —
+a genuine DC bias, which will eat headroom and thump on any downstream
+processing.</p>
+<p><code>—</code> in place of a number means the reading is at or below the −120 dBFS meter
+floor, i.e. digital silence rather than a very quiet signal.</p>
+<h3 id="peak-and-true-peak">Peak and true peak</h3>
+<p><strong>Sample peak</strong> is the largest absolute sample value seen. It is what the bar
+meters show.</p>
+<p><strong>True peak</strong> is the largest value of the <em>reconstructed waveform between</em> the
+samples, per ITU-R BS.1770-4 Annex 2: 4× oversampling through a 96-tap
+Blackman-windowed sinc interpolator (24 taps per polyphase branch), each branch
+normalised to unity DC gain, with the interpolator&#39;s delay line carried across
+frame boundaries so a peak straddling a buffer edge is still seen. The sample
+peak is folded in afterwards, because the polyphase branches sample the
+reconstruction at fractional offsets only.</p>
+<p>Why it matters: a signal can read −3 dBFS on sample peak and still clip a
+downstream converter or a lossy encoder, because the analogue waveform between
+the samples goes higher. The classic case is a sine at fs/4 with a 45° phase
+offset: every sample lands on ±0.707 (−3.01 dBFS) while the underlying waveform
+reaches full scale. Scope reads that as ≈ −0.06 dBTP — the 0.06 dB shortfall is
+the interpolator&#39;s residual passband droop at half-Nyquist, well inside
+BS.1770-4&#39;s ±0.4 dB allowance.</p>
+<p>True peak is measured for every channel and printed by <code>--probe</code> as
+<code>true N dBTP</code>. The GUI bar meters show sample peak and RMS.</p>
+<h3 id="ebu-r128-loudness">EBU R128 loudness</h3>
+<p>Four readouts above the LU bar:</p>
+<table>
+<thead>
+<tr>
+<th>Readout</th>
+<th>Window</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>M</strong></td>
+<td>Momentary — the most recent 400 ms block.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>S</strong></td>
+<td>Short-term — the most recent 3 s.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>I</strong></td>
+<td>Integrated — everything since connect or <strong>Reset stats</strong>, gated.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>LRA</strong></td>
+<td>Loudness range, EBU Tech 3342 — 95th minus 10th percentile of the gated short-term distribution, in LU.</td>
+<td>Needs a few seconds of history before it means anything.</td>
+</tr>
+</tbody></table>
+<p>Each shows <code>—</code> until enough audio has accumulated to measure it, rather than a
+misleading number. Colour: within 1 LU of the −23 LUFS target is green, within
+3 LU amber, otherwise plain.</p>
+<p>The implementation follows BS.1770-4 literally rather than approximating it:</p>
+<ol>
+<li><strong>K-weighting</strong> — a high shelf (1681.97 Hz, Q 0.7072, +4.00 dB) followed by
+an RLB high pass (38.14 Hz, Q 0.5003), both biquads, with coefficients
+<strong>derived for the running sample rate</strong> rather than copied from the
+recommendation&#39;s 48 kHz table. The same tone reads the same at 44.1, 48 and
+96 kHz.</li>
+<li><strong>Blocks</strong> — 400 ms at 75 % overlap, i.e. a new gating block every 100 ms.</li>
+<li><strong>Gating</strong> — an absolute gate at −70 LUFS, then a relative gate 10 LU below
+the mean of everything that survived the absolute gate. LRA uses the same
+absolute gate with a 20 LU relative gate.</li>
+<li><strong>Channel weighting</strong> — 1.0 for L/R/C, 1.41 for the surrounds, 0 for the LFE
+in a 6-channel layout. Channel counts that do not match a standard layout are
+weighted 1.0 throughout: over-counting an unrecognised layout is far less
+surprising than silently zeroing a channel.</li>
+</ol>
+<p>Block loudnesses accumulate into a fixed histogram of 0.1 LU bins, so a monitor
+left running for a week uses the same memory as one running for a minute.
+A −23 dBFS calibration tone on L and R integrates to −23.0 LUFS ±0.1.</p>
+<p><strong>The LU bar</strong> underneath spans −18 to +9 LU <em>relative to −23 LUFS</em>, with a
+green tolerance band at ±1 LU. The thick needle is short-term, the thin one
+momentary. Changing the channel count resets the integrated measurement — the
+channel weights, and therefore the summed power, change meaning.</p>
+<h3 id="correlation">Correlation</h3>
+<p>Phase correlation between <strong>channels 1 and 2 only</strong>, computed over the same
+window as the meters and clamped to −1…+1.</p>
+<table>
+<thead>
+<tr>
+<th>Reading</th>
+<th>Caption</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>+1</td>
+<td><code>MONO</code> above +0.98</td>
+<td>The two channels are identical. Correct for a mono source fed to both legs; suspicious on programme audio.</td>
+</tr>
+<tr>
+<td>+0.3 … +0.98</td>
+<td><code>CORRELATION</code></td>
+<td>Normal stereo.</td>
+</tr>
+<tr>
+<td>0 … +0.3</td>
+<td>amber</td>
+<td>Very wide, or largely uncorrelated content. Watch it.</td>
+</tr>
+<tr>
+<td>below 0</td>
+<td><code>PHASE</code></td>
+<td>Out of phase; will partially cancel in a mono downmix.</td>
+</tr>
+<tr>
+<td>below −0.2</td>
+<td><code>OUT OF PHASE</code>, red</td>
+<td>A leg is inverted somewhere.</td>
+</tr>
+<tr>
+<td>below −0.5</td>
+<td>also lights the <strong>PHASE</strong> alarm chip</td>
+<td></td>
+</tr>
+</tbody></table>
+<p>With fewer than two channels the meter reads <code>MONO SOURCE</code> and the value is 0.
+When both channels are digitally silent the value is reported as 0 rather than
+NaN — correlation is undefined there, so do not read 0 as &quot;fine&quot;.</p>
+<h3 id="clipping">Clipping</h3>
+<p>The clip rule is exactly this: <strong>a sample counts as a clip when <code>|x| ≥ 1.0</code></strong>.
+Counts are per channel and cumulative until <strong>Reset stats</strong>.</p>
+<p>This surprises people, so read it twice: <strong>a genuine full-scale sine reports
+clips continuously and forever.</strong> A 0 dBFS 1 kHz tone at 48 kHz has 48 samples
+per period, which puts a sample exactly on each crest and each trough — 2000
+samples per second land on exactly ±1.0, so the counter climbs by 2000 every
+second and the amber <strong>CLIP</strong> chip stays lit. Nothing is wrong. That is the rule
+as specified.</p>
+<p>The same tone at 0.999 amplitude (−0.009 dBFS) reports <strong>zero</strong> clips.</p>
+<p>So:</p>
+<ul>
+<li>On <strong>line-up tone at full scale</strong>, expect a continuously rising clip count.
+Line up at −18 or −20 dBFS instead and the question does not arise.</li>
+<li>On <strong>programme audio</strong>, any clip count at all is real and worth chasing: music
+and speech do not sit on the rail.</li>
+<li>Use <strong>Reset stats</strong> to zero the counter, then watch whether it climbs again.
+A count that is not moving is history; a count that is moving is happening now.</li>
+<li>For headroom questions, look at <strong>true peak</strong>
+(<a href="#peak-and-true-peak">above</a>) rather than the clip count — inter-sample peaks
+above 0 dBTP will not register as clips at all.</li>
+</ul>
+<h3 id="silence">Silence</h3>
+<p>A channel is flagged silent once it has stayed below <strong>−60 dBFS for 2 seconds</strong>
+continuously. Its meter bar dims, its label reads <code>MUTE</code>, and the amber
+<strong>SILENCE</strong> chip lights.</p>
+<p>Two seconds is long enough that a normal pause in speech or a musical rest does
+not trip it, and short enough to catch a lost leg quickly. The timer is counted
+in samples, not in wall-clock time, so it is unaffected by how often the UI
+repaints.</p>
+<h3 id="spectrum">Spectrum</h3>
+<p>Magnitude spectrum of <strong>channel 1 only</strong>, from a 1024-point real FFT with a
+periodic Hann window — 512 bins, about 47 Hz per bin at 48 kHz. Normalisation
+undoes both the two-sided split and the Hann coherent gain, so a full-scale sine
+on a bin centre reads ≈ 0 dB.</p>
+<p>The x axis is logarithmic from 20 Hz to the lower of Nyquist and 22 kHz, with
+decade lines at 100 Hz, 1 kHz and 10 kHz. The y axis runs 0 to −100 dB. Several
+FFT bins share a column in the top octaves, so each column plots the <strong>maximum</strong>
+of the bins that fall in it — a narrow tone is never averaged away.</p>
+<p>Until 1024 samples have accumulated the panel reads
+<code>SPECTRUM: WAITING FOR AUDIO</code>. Use it to identify hum (a spike at 50/60 Hz and
+its harmonics), a lost high end (a hard shelf where a codec&#39;s bandwidth limit
+is), or a stuck tone.</p>
+<hr>
+<h2 id="7-timing">7. Timing</h2>
+<p>Everything on this tab is measured on <strong>this machine&#39;s</strong> monotonic clock as
+frames arrive, or read from the receiver&#39;s own counters. Nothing here depends on
+the sender&#39;s timecode being correct — that is checked separately.</p>
+<p><em>A figure of the Timing tab is not included in this revision; see the note at
+the end of <a href="#12-troubleshooting">§11</a>.</em></p>
+<h3 id="frame-rate-and-jitter">Frame rate and jitter</h3>
+<table>
+<thead>
+<tr>
+<th>Row</th>
+<th>Definition</th>
+<th>Amber</th>
+<th>Red</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>frame rate</strong></td>
+<td><code>measured / nominal fps</code>. <strong>Measured</strong> is 1000 ÷ the mean inter-arrival interval over the last 300 intervals (6 s at 50 fps). <strong>Nominal</strong> is the rate the sender declares in the frame header.</td>
+<td>&gt; 0.2 % off nominal</td>
+<td>&gt; 1 % off nominal</td>
+</tr>
+<tr>
+<td><strong>frame interval</strong></td>
+<td>The nominal period in ms, for reference. <code>40.00 ms</code> at 25 fps.</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>jitter mean</strong></td>
+<td>Mean of |interval − nominal period| across the window. Measured against the <em>sender&#39;s declared period</em>, which is what a plant engineer cares about; with no declared rate it falls back to the window mean.</td>
+<td>&gt; ¼ frame</td>
+<td>&gt; ½ frame</td>
+</tr>
+<tr>
+<td><strong>jitter peak</strong></td>
+<td>The single worst absolute deviation in the window.</td>
+<td>&gt; ½ frame</td>
+<td>&gt; 1 frame</td>
+</tr>
+<tr>
+<td><strong>jitter stddev</strong></td>
+<td>Standard deviation of the signed deviations. No threshold — it is the shape indicator.</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<p>Measured and nominal agreeing does <strong>not</strong> mean the source is well behaved. A
+source that delivers frames in pairs with a gap after each pair has a perfect
+mean rate and is unusable downstream. Mean rate answers &quot;how many&quot;; jitter and
+the plot answer &quot;when&quot;.</p>
+<p><strong>The jitter plot</strong> below the grid draws the rolling window of inter-frame
+intervals in ms against an amber line at the nominal period. Its y range always
+includes half and one-and-a-half times nominal, so a perfectly paced stream still
+shows the tolerance band rather than auto-scaling into noise. A well-clocked
+source is a nearly flat line on the amber. A bursty one is a square wave
+alternating between a very short interval and a long one — the shape in
+<a href="#worked-example-a-bursty-source">§8</a>.</p>
+<h3 id="av-sync">A/V sync</h3>
+<p><code>a/v sync</code> is the last audio <strong>timestamp</strong> minus the last video timestamp, in
+milliseconds. Positive means audio is ahead of video. Amber past ±20 ms, red
+past ±40 ms, which also lights the <strong>A/V SYNC</strong> chip.</p>
+<p>This uses the NDI <em>timestamp</em>, not the timecode. The timestamp is filled in by
+the receiver&#39;s own clock synchronisation and is directly comparable between the
+video and audio streams of the same source, which is exactly what makes A/V sync
+measurable. If either stream supplies no timestamp the figure reads <code>+0.0 ms</code> —
+so a flat zero on a source you know to be out of sync means &quot;not supplied&quot;,
+not &quot;perfect&quot;.</p>
+<h3 id="timecode">Timecode</h3>
+<p>Both NDI timecode and timestamp are signed 64-bit counts of <strong>100-nanosecond
+intervals</strong>. One second is 10 000 000 units, one millisecond is 10 000.</p>
+<p>Two separate rows, and the separation is the point:</p>
+<ul>
+<li><strong>Video timecode / Audio timecode</strong> — <code>present</code> or <code>absent</code>. A value of
+<code>i64::MAX</code>, <code>i64::MIN</code> or <strong>0</strong> counts as absent. Zero is included because NDI
+timecodes are referenced to the Unix epoch, so 0 means 1970 — in practice it
+is what a sender leaves behind when it never assigns the field at all.</li>
+<li><strong>tc discontinuities</strong> — the count of timecode steps that missed the expected
+one-frame step by <strong>more than half a frame</strong>, video and audio combined. That
+catches a dropped frame, a repeated timecode and a jump backwards, while
+tolerating the rounding a sender does on fractional rates like 30000/1001. For
+audio, the expected step is <code>samples ÷ sample_rate</code> seconds, since an audio
+&quot;frame&quot; is however many samples the sender chose to bundle.</li>
+</ul>
+<p><strong>A discontinuity count of 0 against an <code>absent</code> timecode is not a clean result
+— it means nothing is being checked.</strong> That is why presence is reported
+separately instead of being folded into the count. Treating a stuck-at-zero
+timecode as a real reading would make every frame look like a break and bury the
+actual finding (&quot;this source supplies no timecode&quot;) under a huge fault count.</p>
+<h3 id="dropped-frames">Dropped frames</h3>
+<p>The <code>dropped</code> row reads, literally:</p>
+<pre><code>dropped: 0 video, 1214 audio
+</code></pre>
+<p><strong>Read the units.</strong> The panel names them inline for one reason: an earlier
+version rendered this as <code>0 / 1214</code> against a <code>dropped v/a</code> heading and an
+operator read it as <em>&quot;0 of 1214&quot;</em> — zero drops out of 1214 frames, i.e. good
+news. It is the opposite: <strong>zero video frames dropped, and one thousand two
+hundred and fourteen audio frames dropped.</strong> Two independent counters, not a
+ratio. That misreading is what prompted the label change; <code>frames v/a</code> became
+<code>frames:</code> and <code>dropped v/a</code> became <code>dropped:</code>, each value spelled out with its
+own unit.</p>
+<p>The counts are derived from the NDI receiver&#39;s own performance counters, which
+run cumulatively for the life of the receiver — but what is displayed is the
+figure <strong>measured from the last Reset stats or reconnect</strong>, not the receiver&#39;s
+lifetime total. Scope captures a baseline from the receiver on the first poll
+after a reset and reports the difference from there. A reconnect creates a fresh
+receiver whose counters restart at zero; that is detected and re-baselined
+against, so the figure reads 0 rather than underflowing into a huge number.</p>
+<p>Either count being non-zero lights the red <strong>DROPS</strong> chip. Press <strong>Reset stats</strong>
+and watch: a count that stays at zero afterwards is history, a count that climbs
+again is a fault happening now. The <code>frames</code> row above resets on exactly the
+same event.</p>
+<p>A large audio figure alongside zero video is the common pattern, and it usually
+says something about <em>this monitor</em> rather than about the source: capture and
+analysis run on one thread, video analysis is by far the more expensive half
+(about 5 ms per 1080p UYVY frame, more at 2160p), and audio frames are small and
+frequent, so audio is what the receiver discards when the thread is behind. See
+<a href="#high-dropped-audio-counts">§11</a>.</p>
+<h3 id="queue-depth-connections-and-bitrate">Queue depth connections and bitrate</h3>
+<ul>
+<li><strong>bitrate</strong> — video payload bytes over the last second, in Mbit/s, averaged
+over the real span of the window rather than a hard 1 s divisor (so it does not
+under-report during the first second). Audio does not contribute.</li>
+<li><strong>frames</strong> — <code>frames: 12 video, 34 audio</code>, received since connect or reset.
+Same units warning as <code>dropped</code>: two counts, not a ratio.</li>
+<li><strong>Connections</strong> — how many senders are currently connected to this receiver.
+Zero while a source is selected is why the title-bar dot goes amber. A count of
+1 is not proof that frames are arriving — see
+<a href="#connected-but-no-frames-arrive">§11</a>.</li>
+<li><strong>Queued video / Queued audio</strong> — the receiver&#39;s queue depth right now, shown
+in red past 8. A queue that keeps growing means this monitor is not draining
+frames as fast as they arrive; a persistently deep queue and a rising audio
+drop count are the same story told twice.</li>
+</ul>
+<hr>
+<h2 id="8-recording-and-offline-analysis">8. Recording and offline analysis</h2>
+<p>A dropped-frame counter answers <em>&quot;did every frame get here?&quot;</em>. It cannot answer
+<em>&quot;did it get here <strong>when</strong> it should have?&quot;</em> — and downstream equipment that
+paces off arrival cares about the second question far more than the first.</p>
+<p>A source can deliver every frame, drop nothing, hold a perfect average frame
+rate, and still be unusable, because it delivers frames in <strong>bursts</strong>: several
+close together, then a gap. Anything that emits on a schedule — an output pacer,
+a genlocked emitter, a delay line — sees that as constant phase error even
+though nothing was lost.</p>
+<p>Recording makes that visible, and <code>--analyse</code> makes it testable offline against a
+specific downstream pacer&#39;s rules.</p>
+<h3 id="what-a-recording-contains">What a recording contains</h3>
+<p>JSON Lines: one self-contained JSON object per line, one line per frame. <strong>No
+pixels and no audio samples</strong> — just metadata — so an hour of 1080p50 costs a few
+tens of megabytes and the file loads straight into a spreadsheet, pandas, or
+<code>--analyse</code>.</p>
+<p>The field that earns the format its keep is <strong><code>t_us</code>: the arrival time of the
+frame, from a monotonic clock, in microseconds since the recording started</strong>. It
+is taken before the preview downscale, so it is as close as possible to when the
+frame actually arrived rather than including the monitor&#39;s own work. Wall-clock
+time is recorded exactly once, in the session header — as <code>started_unix</code> (epoch
+seconds) and <code>started_utc</code> (ISO-8601) together — purely so a recording can be
+correlated with logs from other systems: wall clock can step backwards
+mid-recording and would make nonsense of interval arithmetic.</p>
+<p><code>started_utc</code> was added after the first release, and the schema version stays
+<strong>1</strong>: it is an added field, and the reader ignores fields it does not know
+about, so nothing that could read a v1 recording stops being able to. Older v1
+recordings, written before the field existed, still load — they simply carry no
+date on the <code>recorded</code> line of the report.</p>
+<table>
+<thead>
+<tr>
+<th>Record <code>type</code></th>
+<th>Fields</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>session</code></td>
+<td><code>version</code>, <code>started_unix</code>, <code>started_utc</code>, <code>source</code>, <code>tool</code> — written once, first line. <code>started_unix</code> is epoch seconds; <code>started_utc</code> is the same instant as ISO-8601 <code>YYYY-MM-DDTHH:MM:SSZ</code>.</td>
+</tr>
+<tr>
+<td><code>video</code></td>
+<td><code>t_us</code>, <code>tc</code>, <code>ts</code>, <code>w</code>, <code>h</code>, <code>fps_n</code>, <code>fps_d</code>, <code>bytes</code>, <code>luma_min</code>, <code>luma_max</code>, <code>luma_mean</code>, <code>illegal</code>, <code>black</code>, <code>frozen</code>.</td>
+</tr>
+<tr>
+<td><code>audio</code></td>
+<td><code>t_us</code>, <code>tc</code>, <code>ts</code>, <code>samples</code>, <code>rate</code>, <code>peak</code> (an array of per-channel dBFS).</td>
+</tr>
+<tr>
+<td><code>scte</code></td>
+<td><code>t_us</code>, <code>tc</code>, <code>rail</code>, <code>valid</code>, <code>ops</code>, <code>absolute</code>, plus <code>insert_type</code>, <code>event_id</code> and <code>pre_roll_ms</code> when a splice decoded.</td>
+</tr>
+<tr>
+<td><code>stats</code></td>
+<td>A periodic rollup (~20 Hz): <code>measured_fps</code>, <code>nominal_fps</code>, <code>jitter_mean_ms</code>, <code>jitter_peak_ms</code>, <code>av_sync_ms</code>, <code>dropped_video</code>, <code>dropped_audio</code>, <code>tc_breaks</code>, <code>queue_video</code>, <code>integrated_lufs</code> — the receiver&#39;s own view alongside the arrivals you can measure for yourself.</td>
+</tr>
+<tr>
+<td><code>end</code></td>
+<td><code>t_us</code>, <code>video_frames</code>, <code>audio_frames</code> — the writer&#39;s own totals, which is how <code>--analyse</code> knows whether the file is whole.</td>
+</tr>
+</tbody></table>
+<p>The reader is deliberately tolerant: unknown record types are counted and
+skipped rather than treated as corruption, unknown fields on a known record are
+ignored, and a malformed or non-UTF-8 line is counted and excluded rather than
+aborting the analysis. A newer recorder can therefore add records and fields
+without breaking an older analyser.</p>
+<p>The buffer is flushed on a one-second timer and on close, so a hard kill loses at
+most a second of tail rather than the whole file.</p>
+<h3 id="making-a-measurement-run">Making a measurement run</h3>
+<p>From the GUI, press <strong>Measure</strong> in the title bar, having first chosen a length in
+the <strong>duration</strong> dropdown beside it: <strong>10 s</strong>, <strong>30 s</strong> (the default), <strong>1 min</strong>,
+<strong>5 min</strong>, <strong>15 min</strong> or <strong>Continuous</strong>. The button is always visible, but it is
+<strong>disabled until a source is connected</strong> — a recording with no source in it is
+just a header line — and hovering it while nothing is connected reads
+<em>Connect to a source first</em>.</p>
+<p>A run is a timed measurement, not a tape you have to remember to stop. Choose a
+length, press once, and the instrument does the rest. While the run is going the
+title-bar area shows:</p>
+<ul>
+<li><code>■ Stop</code>, which ends the run early;</li>
+<li>the elapsed time against the total, <code>0:12 / 0:30</code>;</li>
+<li>the frame count so far;</li>
+<li>a progress bar filling toward the chosen duration.</li>
+</ul>
+<p><strong>A run ends itself when its time is up, whether or not frames are still
+arriving.</strong> The timer lives in the capture thread and is checked on every loop
+iteration rather than once per received frame, and that distinction matters in
+exactly the case you most want to measure: a source that stalls part way through.
+A timer checked per frame stops being checked at all when the frames stop, and a
+30-second run against a source that dies at second 3 would sit open forever and
+leave a file with no <code>end</code> record on it. As it is, the run closes at second 30
+and you get a whole, analysable recording of the stall.</p>
+<p><strong>Continuous</strong> is the old open-ended behaviour, and it must be stopped by hand.
+Use it when you are waiting for an intermittent fault whose timing you cannot
+predict, rather than characterising a source you already have in front of you.</p>
+<p>Recordings land in **<code>%USERPROFILE%\Documents\CloudCast Scope\</code>** as
+<code>scope-&lt;source-slug&gt;-&lt;unix-seconds&gt;.jsonl</code>, so two runs never silently overwrite
+each other and nothing depends on where the process happened to be started from.
+If Documents does not exist, or has been redirected somewhere unavailable, the
+system temp directory is used instead. The directory is created if it is not
+there yet. While a run is going the <strong>full path of the file being written is
+shown in the left-hand panel</strong>, and hovering the progress display shows it too —
+so there is never a question of where the evidence went.</p>
+<p>When the run finishes — by its timer or by <strong>Stop</strong> — the file is closed and
+flushed, then <strong>analysed automatically</strong>, and the <strong>Report</strong> tab
+(<a href="#the-report-tab">below</a>) opens with the result. You do not have to go and find
+the file and feed it to <code>--analyse</code> yourself; that path still works, and the
+report is the same one, but the ordinary case is now press, wait, read.</p>
+<p>If a run cannot be started, or a write fails part way through, the run stops and
+a red <strong>Recording failed</strong> message appears in the left-hand panel with the
+underlying error text (a permission denial, a full disk, a path that cannot be
+created). A recording that silently stopped is worse than none, so the failure is
+always on screen rather than only in a log.</p>
+<p>From the command line, nothing has changed — <code>--probe</code> with <code>--seconds</code> is the
+headless equivalent of a timed run, and always was:</p>
+<pre><code>cloudcast-scope --probe &quot;Decoder&quot; --seconds 60 --record decoder.jsonl
+cloudcast-scope --analyse decoder.jsonl
+</code></pre>
+<p><code>--record</code> also works on a GUI launch (<code>cloudcast-scope --source &quot;Decoder&quot; --record run.jsonl</code>), in which case recording starts as soon as the connection
+is up, so the session header names the source actually attached to.</p>
+<p><code>--record</code> takes the path you give it verbatim, relative to the working
+directory, and <strong>creates any missing parent directories</strong>, so
+<code>--record logs\today.jsonl</code> works from a fresh checkout without a <code>mkdir</code> first.
+The same failure reporting applies on a GUI launch.</p>
+<h3 id="the-report-tab">The Report tab</h3>
+<p>The Report tab holds the analysis of the most recent measurement run. Before the
+first run of a session it reads <em>No measurement run yet.</em>; afterwards the result
+stays there until the next run replaces it, so you can go back to the scopes,
+compare against the live picture, and return to the numbers.</p>
+<p>The analysis runs on a <strong>worker thread</strong>, so the tab fills in a moment after the
+run ends and the rest of the application keeps painting and keeps measuring while
+it does. That is not a nicety — a 15-minute run at 50 fps is 45 000 video frames,
+and doing that work on the UI thread would lock the window for as long as it took.</p>
+<p>At the top is the <strong>headline block</strong>: the verdict, coloured — green
+<strong>Well clocked</strong>, amber <strong>Mostly well clocked</strong>, red <strong>Bursty</strong> — with the
+deadline-emission percentage beside it, which is the single number the whole
+section exists to produce (<a href="#the-pacer-simulation">the pacer simulation</a> explains
+what it means). Under it, the figures worth reading before anything else, with
+out-of-spec values coloured:</p>
+<table>
+<thead>
+<tr>
+<th>Row</th>
+<th>What it tells you</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Duration</strong></td>
+<td>How long the run actually covered. Compare it with the duration you asked for.</td>
+</tr>
+<tr>
+<td><strong>Frames</strong></td>
+<td>Video and audio frame counts, named separately — the same two-counters-not-a-ratio warning as <a href="#dropped-frames">§7</a>.</td>
+</tr>
+<tr>
+<td><strong>Frame rate</strong></td>
+<td>Measured against nominal. A measured rate well under nominal is a starved source, not a jitter problem.</td>
+</tr>
+<tr>
+<td><strong>Arrival interval</strong></td>
+<td>Mean, standard deviation, and — the number to read first — that standard deviation <strong>as a percentage of a frame period</strong>. A few per cent is a well-clocked source; anything approaching a whole frame is not.</td>
+</tr>
+<tr>
+<td><strong>Off-phase cause</strong></td>
+<td>The late / bunched split of the deadline emissions. Late means starvation, bunched means batching upstream; the two send you to opposite ends of the plant.</td>
+</tr>
+<tr>
+<td><strong>Dropped</strong></td>
+<td>Video and audio drops during the run.</td>
+</tr>
+<tr>
+<td><strong>Timecode</strong></td>
+<td>Whether video and audio timecode were present at all.</td>
+</tr>
+</tbody></table>
+<p>Below the headline is the <strong>full text report</strong> in monospace — byte for byte what
+<code>--analyse</code> prints for the same file, including the interval histogram, the pacer
+simulation and the grace sensitivity table described in the rest of this section.
+<strong>Copy report</strong> puts that whole text on the clipboard, which is what you want for
+a ticket, an email to a vendor, or a paste into a fault log.</p>
+<h4 id="reading-a-report-a-starved-source">Reading a report: a starved source</h4>
+<p>A real 30-second run against an NDI test-pattern generator that had been left in
+the background and was emitting roughly one frame a second. The headline block:</p>
+<pre><code>Bursty   96.67% deadline emissions
+Duration          30.0 s
+Frames            28 video, 263 audio
+Frame rate        1.038 measured / 29.970 nominal
+Arrival interval  963.05 ms mean, sd 187.10 ms (560.7% of a frame)
+Off-phase cause   752 late, 2 bunched
+Dropped           0 video, 0 audio
+Timecode          video present, audio present
+</code></pre>
+<p>Read it top to bottom:</p>
+<ul>
+<li><strong><code>Dropped 0 video, 0 audio</code>.</strong> Nothing was lost. A dropped-frame counter —
+the check most people reach for first — passes this source cleanly, and that is
+the entire argument of this section in one line.</li>
+<li><strong><code>1.038 measured / 29.970 nominal</code>.</strong> The sender declares 29.97 fps and
+delivers one frame a second. It is not jittering around the right rate; it is
+barely sending.</li>
+<li><strong><code>963.05 ms mean, sd 187.10 ms (560.7% of a frame)</code>.</strong> The standard deviation
+is five and a half <em>frames</em>. There is no clock here to speak of.</li>
+<li><strong><code>752 late, 2 bunched</code>.</strong> Late dominates overwhelmingly, which points at
+starvation — the source stalling — rather than at batching on the path. Chase
+the sender, not the NIC.</li>
+<li><strong><code>96.67% deadline emissions</code></strong>, hence <strong>Bursty</strong>. Almost every frame a
+downstream pacer emitted would have come from its own timer rather than from an
+arriving frame.</li>
+<li><strong><code>28 video, 263 audio</code>.</strong> Worth noticing on its own: the audio rail is
+healthy while the video rail is starved. The two fail independently, so a
+source that is plainly still alive on audio can be delivering nothing usable on
+video.</li>
+</ul>
+<p>This is also what the &quot;<a href="#connected-but-no-frames-arrive">connected but no frames arrive</a>&quot;
+failure in <a href="#12-troubleshooting">§11</a> looks like once you measure it instead of
+watching it: connection up, timecode present, audio flowing, zero drops, and a
+video feed that is not there.</p>
+<h3 id="reading-the-analysis-report">Reading the analysis report</h3>
+<p>This is the full text report — what <code>--analyse</code> prints, and what the lower half
+of the <a href="#the-report-tab">Report tab</a> shows. Six sections. Taking them in order:</p>
+<p><strong>Session header.</strong> Source, duration, frame counts, and the <code>end record</code> line.
+If the writer&#39;s own totals disagree with the number of records actually read,
+that line says <code>MISMATCH — recording is truncated or lossy</code>; if the <code>end</code> record
+is missing entirely it says <code>ABSENT — recording was cut short</code>. Either means
+treat every count below as a lower bound. <code>format</code> names the raster and the
+nominal rate and, in brackets, <strong>where the rate came from</strong>: <code>declared</code> (the
+sender filled in <code>fps_n</code>/<code>fps_d</code>), <code>inferred from median interval</code>, or <code>assumed</code>.
+A silently invented period would make the whole pacer section a lie, so it is
+always stated. The <code>recorded</code> line carries the wall-clock date the recording
+started, taken from the header&#39;s <code>started_utc</code>; recordings written before that
+field existed show the source and tool version with no date.</p>
+<p><strong>Video arrival intervals.</strong> Count, mean against nominal, median, min/max,
+standard deviation as an absolute figure <em>and as a percentage of a frame
+period</em>, then percentiles. The percentage is the number to read first: an sd of
+3 % of a frame is a well-clocked source; 87 % is not.</p>
+<p><strong>The Airlock pacer simulation</strong> — see <a href="#the-pacer-simulation">below</a>.</p>
+<p><strong>Timecode.</strong> How many frames carried a non-zero timecode, the mean/median
+timecode step, and how many steps differ from one frame by more than half a
+frame. A source with no timecode gets an explicit paragraph saying so rather
+than a clean-looking zero.</p>
+<p><strong>Audio.</strong> Frame and sample counts, rate and channel count, how many seconds of
+samples the file holds, the inter-arrival interval statistics, the worst peak,
+and counts of frames at or above −0.1 dBFS (&quot;near clip&quot;) and at or below
+−90 dBFS (&quot;silent&quot;). Peaks in a recording are already per-channel dBFS, so this
+is a cheap summary, not a substitute for the live loudness meter.</p>
+<p><strong>Verdict.</strong> Plain English, with a stated rule behind it:</p>
+<table>
+<thead>
+<tr>
+<th>Verdict</th>
+<th>Condition</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>WELL CLOCKED</code></td>
+<td>Deadline emissions below 1 % <strong>and</strong> sd below 25 % of a frame.</td>
+</tr>
+<tr>
+<td><code>MOSTLY WELL CLOCKED</code></td>
+<td>Deadline emissions below 5 %.</td>
+</tr>
+<tr>
+<td><code>BURSTY</code></td>
+<td>Anything else.</td>
+</tr>
+</tbody></table>
+<p>followed, whenever there were any deadline emissions, by a dominant cause:
+<strong>BUNCHING</strong> (bunched more than twice late), <strong>LATE FRAMES</strong> (late more than
+twice bunched), or <strong>MIXED</strong> — each with the specific things to go and look at.</p>
+<h3 id="the-arrival-interval-histogram">The arrival interval histogram</h3>
+<p>The shape is the diagnosis, and no summary statistic substitutes for it. Two
+recordings with an identical mean interval and zero drops can have completely
+different histograms.</p>
+<ul>
+<li>A <strong>well-clocked</strong> source is one tight cluster around the nominal period. The
+<code>&lt;- nominal</code> marker sits on or beside the tallest bar.</li>
+<li>A <strong>bursty</strong> source is <strong>bimodal</strong> — a spike near zero (frames arriving in
+clumps) plus a spread of long gaps — and the nominal bin is empty. Seeing the
+nominal marker point at a bar containing 0.0 % of the intervals is the single
+clearest signature of the fault.</li>
+</ul>
+<p>Mechanics worth knowing when reading one: there are 24 bins; the top of the
+range is clipped at the 99.5th percentile with the tail collected into a final
+overflow row (otherwise one 3-second stall flattens the whole distribution into
+a single bar); and a non-empty bin never renders as blank, because a single
+stray frame in a long gap is exactly the event being hunted.</p>
+<h3 id="the-pacer-simulation">The pacer simulation</h3>
+<p>This is the headline. It replays the recorded arrival times through the rules of
+a downstream output pacer — a literal transcription of Airlock&#39;s <code>OutputPacer</code>,
+not an approximation, because a metric that is nearly right sends people chasing
+the wrong fix — and reports what fraction of output frames the pacer would have
+had to emit from its <strong>deadline timer</strong> rather than from an arriving input
+frame.</p>
+<p>The model, with the engine&#39;s shipping defaults:</p>
+<ul>
+<li><strong>period</strong> = the nominal frame period (40 ms at 25 fps).</li>
+<li><strong>grace</strong> = 0.25 × period. The deadline timer wakes at <code>phase + grace</code>.</li>
+<li><strong>min spacing</strong> = 0.50 × period. An input frame arriving less than this after
+the last emission is <strong>deferred</strong> — stashed rather than emitted.</li>
+<li>On a deadline wake the pacer emits, then advances its phase by whole periods
+until it is back ahead of now.</li>
+</ul>
+<p>Every deadline emission is attributed to one of two causes:</p>
+<table>
+<thead>
+<tr>
+<th>Cause</th>
+<th>Meaning</th>
+<th>Usual origin</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>late</strong></td>
+<td>The input gap exceeded <code>period + grace</code>, so the pacer reached its deadline with nothing new to send.</td>
+<td>Starvation: the source is stalling, dropping, or being delivered late. Check sender load, encoder stalls, link loss.</td>
+</tr>
+<tr>
+<td><strong>bunched</strong></td>
+<td>A frame had arrived inside the minimum spacing and been deferred; the timer flushed it.</td>
+<td>Batching upstream: a sender writing several frames at once, or a network path coalescing them. Check the sender&#39;s output scheduling and NIC interrupt moderation / receive coalescing on the path.</td>
+</tr>
+</tbody></table>
+<p><code>deferrals</code> counts input frames stashed rather than emitted; <code>context</code> restates
+the same thing distribution-side — what share of intervals fell below min
+spacing and what share exceeded <code>period + grace</code>.</p>
+<p><code>DEADLINE 0.00 %</code> means the pacer stayed input-paced throughout, and whatever
+complaint you are chasing is not in this feed&#39;s arrival timing.</p>
+<h3 id="the-grace-sensitivity-table">The grace sensitivity table</h3>
+<p>Under the simulation, the same replay is run with the grace widened to 0.50,
+0.75 and 1.00 × period (min spacing held at 0.50). The purpose is to tell two
+situations apart: if a wider grace collapses the deadline rate, the feed is
+merely marginal and a configuration change fixes it; if it barely moves, the
+source itself has to be fixed.</p>
+<p><strong>The table is not monotonic, and you must not read it as a tuning curve.</strong>
+Widening the grace can lock the pacer&#39;s phase just after each burst and make
+matters worse before it makes them better. In the bursty example below the rate
+goes 49.97 % → 49.97 % → <strong>99.87 %</strong> → 0.00 % as grace goes 0.25 → 0.50 → 0.75 →
+1.00; at 0.50 the deadline <em>count</em> is unchanged but the cause flips almost
+entirely from <code>bunched</code> to <code>late</code>, and at 0.75 nearly every emission has become
+a deadline emission because the timer has taken over the phase completely.</p>
+<p>Read the table as evidence about the source&#39;s arrival pattern, not as a
+recommended setting. &quot;Grace 1.00 fixes it&quot; is an observation about one specific
+burst period, not a configuration to deploy.</p>
+<h4 id="worked-example-a-well-clocked-source">Worked example: a well-clocked source</h4>
+<p>This example and the next are <strong>illustrative captures from synthetic feeds</strong>,
+not from a production path. They are included because they show the two extreme
+shapes cleanly; real sources sit between them, and the
+<a href="#worked-example-a-real-source">third example</a> is one. Paths in the headers are
+shortened.</p>
+<p>A sender with a real clock. Sixty seconds, 1500 frames at 25 fps, no drops:</p>
+<pre><code>=== original.jsonl ===
+source      SIMULATED clocked NDI sender
+recorded      (CloudCast Scope 0.1.0, format v1)
+duration    59.961 s  (00:00:59.961)
+frames      1500 video, 0 audio
+end record  1500 video, 0 audio
+format      1920x1080, 25.000 fps nominal (declared)
+period      40.000 ms
+lines       0 unknown types skipped, 0 malformed
+
+-- video arrival intervals (ms between consecutive t_us) --
+count       1499
+mean        40.001 ms   (nominal 40.000 ms)
+median      40.012 ms
+min / max   37.062 / 42.843 ms
+std dev     1.168 ms   (2.9% of period)
+percentiles p1 37.47  p5 38.01  p25 39.20  p50 40.01  p75 40.82  p95 41.95  p99 42.58
+
+distribution (1499 intervals, bin 0.236 ms)
+   37.06–37.30    |#                                         |       5    0.3%
+   37.30–37.53    |#####                                     |      17    1.1%
+   37.53–37.77    |######                                    |      19    1.3%
+   37.77–38.01    |###########                               |      33    2.2%
+   38.01–38.24    |##############                            |      43    2.9%
+   38.24–38.48    |###############                           |      45    3.0%
+   38.48–38.72    |########################                  |      73    4.9%
+   38.72–38.95    |##################                        |      55    3.7%
+   38.95–39.19    |###########################               |      83    5.5%
+   39.19–39.42    |##############################            |      92    6.1%
+   39.42–39.66    |###################################       |     106    7.1%
+   39.66–39.90    |######################################    |     116    7.7%
+   39.90–40.13    |##########################################|     126    8.4%  &lt;- nominal
+   40.13–40.37    |#####################################     |     113    7.5%
+   40.37–40.61    |#################################         |     100    6.7%
+   40.61–40.84    |####################################      |     108    7.2%
+   40.84–41.08    |#################################         |     100    6.7%
+   41.08–41.31    |#################                         |      53    3.5%
+   41.31–41.55    |###################                       |      58    3.9%
+   41.55–41.79    |#################                         |      53    3.5%
+   41.79–42.02    |#############                             |      39    2.6%
+   42.02–42.26    |#######                                   |      21    1.4%
+   42.26–42.50    |#######                                   |      21    1.4%
+   42.50–42.73    |####                                      |      12    0.8%
+   42.73+         |##                                        |       8    0.5%  (max 42.84 ms)
+
+-- Airlock pacer simulation --
+period      40.000 ms
+grace       10.000 ms   (0.25 x period)
+min spacing 20.000 ms   (0.50 x period)
+emissions   1500 total from 1500 input frames
+input-paced 1500 (100.0%)
+DEADLINE    0 (0.00%)   &lt;- the number that matters
+  late      0 — input gap exceeded period + grace (50.00 ms)
+  bunched   0 — frame arrived within min spacing and was deferred
+deferrals   0 input frames stashed rather than emitted
+context     0.0% of intervals below min spacing, 0.0% above period + grace
+
+sensitivity to grace (min spacing held at 0.50)
+  grace   deadline      rate      late   bunched
+   0.25          0     0.00%         0         0
+   0.50          0     0.00%         0         0
+   0.75          0     0.00%         0         0
+   1.00          0     0.00%         0         0
+
+-- verdict --
+Arrival is WELL CLOCKED. Intervals cluster on the nominal period
+(sd 1.17 ms = 3% of a frame) and the pacer stays input-paced:
+0.00% deadline emissions. Nothing here explains a pacing complaint.
+</code></pre>
+<p>Everything agrees. The histogram is a single hump centred on the nominal bin,
+the standard deviation is 2.9 % of a frame, and every one of the 1500 emissions
+was driven by an arriving frame. The sensitivity table is flat at zero because
+there is nothing for a wider grace to rescue.</p>
+<h4 id="worked-example-a-bursty-source">Worked example: a bursty source</h4>
+<p>Also synthetic. The same nominal rate, the same frame count, the same duration —
+and still not a single dropped frame. Frames arrive in pairs 5 ms apart with a 75 ms gap after
+each pair:</p>
+<pre><code>=== decoder.jsonl ===
+source      SIMULATED unclocked SRT decoder
+recorded      (CloudCast Scope 0.1.0, format v1)
+duration    59.925 s  (00:00:59.925)
+frames      1500 video, 0 audio
+end record  1500 video, 0 audio
+format      1920x1080, 25.000 fps nominal (declared)
+period      40.000 ms
+lines       0 unknown types skipped, 0 malformed
+
+-- video arrival intervals (ms between consecutive t_us) --
+count       1499
+mean        39.977 ms   (nominal 40.000 ms)
+median      5.000 ms
+min / max   5.000 / 75.000 ms
+std dev     35.000 ms   (87.5% of period)
+percentiles p1 5.00  p5 5.00  p25 5.00  p50 5.00  p75 75.00  p95 75.00  p99 75.00
+
+distribution (1499 intervals, bin 2.917 ms)
+    5.00–7.92     |##########################################|     750   50.0%
+    7.92–10.83    |                                          |       0    0.0%
+   10.83–13.75    |                                          |       0    0.0%
+   13.75–16.67    |                                          |       0    0.0%
+   16.67–19.58    |                                          |       0    0.0%
+   19.58–22.50    |                                          |       0    0.0%
+   22.50–25.42    |                                          |       0    0.0%
+   25.42–28.33    |                                          |       0    0.0%
+   28.33–31.25    |                                          |       0    0.0%
+   31.25–34.17    |                                          |       0    0.0%
+   34.17–37.08    |                                          |       0    0.0%
+   37.08–40.00    |                                          |       0    0.0%
+   40.00–42.92    |                                          |       0    0.0%  &lt;- nominal
+   42.92–45.83    |                                          |       0    0.0%
+   45.83–48.75    |                                          |       0    0.0%
+   48.75–51.67    |                                          |       0    0.0%
+   51.67–54.58    |                                          |       0    0.0%
+   54.58–57.50    |                                          |       0    0.0%
+   57.50–60.42    |                                          |       0    0.0%
+   60.42–63.33    |                                          |       0    0.0%
+   63.33–66.25    |                                          |       0    0.0%
+   66.25–69.17    |                                          |       0    0.0%
+   69.17–72.08    |                                          |       0    0.0%
+   72.08–75.00    |######################################### |     749   50.0%
+
+-- Airlock pacer simulation --
+period      40.000 ms
+grace       10.000 ms   (0.25 x period)
+min spacing 20.000 ms   (0.50 x period)
+emissions   1499 total from 1500 input frames
+input-paced 750 (50.0%)
+DEADLINE    749 (49.97%)   &lt;- the number that matters
+  late      0 — input gap exceeded period + grace (50.00 ms)
+  bunched   749 — frame arrived within min spacing and was deferred
+deferrals   750 input frames stashed rather than emitted
+context     50.0% of intervals below min spacing, 50.0% above period + grace
+
+sensitivity to grace (min spacing held at 0.50)
+  grace   deadline      rate      late   bunched
+   0.25        749    49.97%         0       749
+   0.50        749    49.97%       748         1
+   0.75        749    99.87%         0       749
+   1.00          0     0.00%         0         0
+
+-- timecode --
+video tc    0 of 1500 frames carry a non-zero tc
+audio tc    0 of 0 frames carry a non-zero tc
+            NO VIDEO TIMECODE — the sender never set it, so anything
+            downstream that keys off tc (delay alignment, SCTE with an
+            absolute timestamp) has nothing to work with.
+
+-- audio --
+(no audio records in this recording)
+
+-- verdict --
+Arrival is BURSTY. 49.97% of emissions (749 of 1499) had to come from the
+deadline timer rather than an input frame — that is the visible fault.
+50.0% of intervals are under half a frame and 50.0% are over 1.25
+frames; sd is 35.00 ms, 87% of a frame period.
+
+Dominant cause: BUNCHING (749 of 749 deadline emissions). Frames arrive in
+clumps closer together than half a frame, so the pacer defers them and a
+timer flushes them instead. That pattern comes from batching upstream —
+a sender writing several frames at once, or a network path coalescing
+them — not from lost frames. Look at the sender&#39;s output scheduling and
+at NIC interrupt moderation / receive coalescing on the path.
+</code></pre>
+<p>Read the two side by side:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Clocked</th>
+<th>Bursty</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Mean interval</td>
+<td>40.001 ms</td>
+<td>39.977 ms</td>
+</tr>
+<tr>
+<td>Frames / drops</td>
+<td>1500 / 0</td>
+<td>1500 / 0</td>
+</tr>
+<tr>
+<td>Standard deviation</td>
+<td>1.17 ms (2.9 % of a frame)</td>
+<td>35.00 ms (87.5 %)</td>
+</tr>
+<tr>
+<td>Median interval</td>
+<td>40.01 ms</td>
+<td><strong>5.00 ms</strong></td>
+</tr>
+<tr>
+<td>Histogram shape</td>
+<td>one hump on nominal</td>
+<td><strong>bimodal, nominal bin empty</strong></td>
+</tr>
+<tr>
+<td>Deadline emissions</td>
+<td><strong>0.00 %</strong></td>
+<td><strong>49.97 %</strong></td>
+</tr>
+</tbody></table>
+<p>The mean frame rate, the frame count and the drop count are effectively
+identical. Every conventional health check passes on both. Half of the bursty
+source&#39;s output frames would be emitted off-phase by anything downstream that
+paces — which is the operator-visible fault, and it is invisible to every
+measurement except arrival timing.</p>
+<p>Note also the sensitivity table on the bursty capture behaving exactly as warned
+in <a href="#the-grace-sensitivity-table">the previous section</a>: 0.75 grace reports a
+<em>worse</em> rate than 0.25 despite the identical deadline count, because the total
+emission count collapsed.</p>
+<h4 id="worked-example-a-real-source">Worked example: a real source</h4>
+<p>Both of the above are constructed. This one is not: it is a <strong>live NDI test-bars
+source captured over the network</strong>, 26 seconds at 25 fps, and it is what a real
+feed looks like — neither of the two clean shapes, and sitting between them.</p>
+<pre><code>count       650
+mean        39.959 ms   (nominal 40.000 ms)
+median      40.072 ms
+min / max   5.065 / 61.707 ms
+std dev     5.832 ms   (14.6% of period)
+percentiles p1 23.63  p5 29.91  p25 37.11  p50 40.07  p75 43.22  p95 49.06  p99 55.26
+
+input-paced 629 (96.8%)
+DEADLINE    21 (3.23%)
+  late      21 — input gap exceeded period + grace (50.00 ms)
+  bunched   0
+  grace 0.25 -&gt; 3.23%   0.50 -&gt; 0.46%   0.75 -&gt; 0.00%   1.00 -&gt; 0.00%
+</code></pre>
+<p>Read it against the two synthetic captures. The mean is on nominal and the median
+is within 0.1 ms of it, so the sender&#39;s clock is sound. But the standard
+deviation is 14.6 % of a frame — five times the clocked example, a sixth of the
+bursty one — and the extremes reach from 5.065 ms to 61.707 ms, so a handful of
+frames really did arrive almost on top of the last one and a handful really did
+arrive a frame and a half late. The verdict lands at <code>MOSTLY WELL CLOCKED</code>:
+3.23 % deadline emissions, all of them <strong>late</strong> rather than <strong>bunched</strong>, and the
+sensitivity table collapses to 0.46 % at 0.50 grace and to zero at 0.75 — the
+signature of a feed that is <em>marginal</em>, not broken. Widening the grace would fix
+it; so would removing whatever produced the occasional long gap.</p>
+<p><strong>A few percent is not automatically an alarm.</strong> Nothing on a real network
+delivers the flat line of the synthetic example. What matters is whether the
+number is stable over time, whether the cause is <code>late</code> or <code>bunched</code>, and whether
+the downstream device actually complains.</p>
+<p><strong>The caveat, and it is not a small one.</strong> This capture was taken on a
+<em>different machine</em>, across a <em>different network path</em>, from the one the
+production consumer sits on. Some unknown share of that 5.832 ms of jitter is the
+measurement path — the extra hops, the NIC coalescing, the scheduling on the
+capturing box — and not the sender at all. Arrival timing is a property of the
+whole path from sender to receiver, not of the sender alone, so:</p>
+<blockquote>
+<p><strong>Measure from where the real consumer sits.</strong> Run Scope on the machine that
+will actually consume the feed, on the same NIC and the same VLAN. A capture
+taken from a quieter path flatters the source; one taken from a busier path
+damns it. Either way the numbers describe your measurement path, not the
+sender, and acting on them is how a fault gets chased in the wrong building.</p>
+</blockquote>
+<hr>
+<h2 id="9-scte-104">9. SCTE-104</h2>
+<h3 id="what-is-decoded">What is decoded</h3>
+<p>SCTE-104 splice messages carried in NDI metadata as VANC, per SMPTE ST 2010 —
+DID <code>0x41</code>, SDID <code>0x07</code>. The XML looks like:</p>
+<pre><code class="language-xml">&lt;vancData version=&quot;1.0&quot;&gt;&lt;vancPacket did=&quot;65&quot; sdid=&quot;7&quot; line=&quot;10&quot;&gt;BASE64&lt;/vancPacket&gt;&lt;/vancData&gt;
+</code></pre>
+<p>The base64 payload holds the 8-bit user data words only, so there is no 10-bit
+ANC stack to unwind: decode the base64 and the SCTE-104 message is there. Both
+decimal (<code>did=&quot;65&quot;</code>) and hex (<code>did=&quot;0x41&quot;</code>) attribute forms are accepted, and
+senders that multiplex several VANC types into one metadata frame (AFD, timecode,
+captions and SCTE-104) are handled by skipping the packets that do not match.
+Senders that wrap the ST 291 header into the payload are handled too.</p>
+<p>Both SCTE-104 message shapes are decoded:</p>
+<ul>
+<li><strong>multiple_operation_message (MOM)</strong> — begins with the reserved marker
+<code>0xFFFF</code>, carries a timestamp structure and a list of operations. Unknown
+opIDs are skipped by their declared <code>data_length</code> rather than aborting the
+walk, so a splice sitting behind a vendor-private op is still found.</li>
+<li><strong>single_operation_message (SOM)</strong> — begins with an opID and carries no
+timestamp structure, so its splice is <strong>relative by definition</strong>.</li>
+</ul>
+<p>SCTE-35 section decoding is also implemented in the same library, for gear that
+carries sections rather than SCTE-104 operations.</p>
+<p>Malformed input never crashes the decoder: every read is bounds-checked and
+arbitrary bytes yield an explicitly invalid cue. A cue can be invalid and still
+carry a decoded splice — a truncated op list after a good splice, say — which is
+why the panel reports the two independently, marking the card <code>malformed</code> while
+still showing the fields.</p>
+<h3 id="the-two-rails">The two rails</h3>
+<p>Cues are decoded on <strong>both</strong> rails, and each card says which one it arrived on:</p>
+<ul>
+<li><strong><code>per-frame</code></strong> — metadata attached to a video frame. The cue is anchored to
+that frame, and the card shows its frame index and timecode.</li>
+<li><strong><code>standalone</code></strong> — the separate NDI metadata rail, for senders that emit cues
+out of band.</li>
+</ul>
+<p>Watching only one rail is a common way to conclude that a source &quot;sends no
+cues&quot;. Scope watches both.</p>
+<h3 id="splice-fields">Splice fields</h3>
+<p>The SCTE tab shows the cue count in the tab label and one card per cue, newest
+first, up to the most recent 200. Each card carries an <strong>OUT</strong> (break start),
+<strong>IN</strong> (break end) or <strong>CANCEL</strong> chip, the insert type, the event id, and how
+long ago it was seen — then the decoded <code>splice_request_data</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Wire type</th>
+<th>Shown as</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>splice_insert_type</code></td>
+<td>1 byte</td>
+<td><code>SpliceStartNormal</code>, <code>SpliceStartImmediate</code>, <code>SpliceEndNormal</code>, <code>SpliceEndImmediate</code> or <code>SpliceCancel</code>. A value of 0 (reserved) or above 5 is rejected — a splice that cannot be named must not be acted on.</td>
+</tr>
+<tr>
+<td><code>splice_event_id</code></td>
+<td>4 bytes</td>
+<td><code>id N</code></td>
+</tr>
+<tr>
+<td><code>unique_program_id</code></td>
+<td>2 bytes</td>
+<td>Unique program id</td>
+</tr>
+<tr>
+<td><code>pre_roll_time</code></td>
+<td>2 bytes</td>
+<td><strong>milliseconds</strong></td>
+</tr>
+<tr>
+<td><code>break_duration</code></td>
+<td>2 bytes</td>
+<td><strong>tenths of a second</strong>, displayed as seconds (<code>30.0 s</code>)</td>
+</tr>
+<tr>
+<td><code>avail_num</code> / <code>avails_expected</code></td>
+<td>1 byte each</td>
+<td><code>Avail 2 of 4</code></td>
+</tr>
+<tr>
+<td><code>auto_return</code></td>
+<td>1 byte</td>
+<td>yes / no</td>
+</tr>
+</tbody></table>
+<p>Those two unit choices are the one place in the decode where a misread produces
+an air-critical error rather than a parse failure — a 10× unit error puts the
+splice at the wrong instant with no other symptom. So the decoder carries an
+explicit guard: a pre-roll over 60 seconds or a break duration over an hour is
+far more likely a unit error than a real cue, and the card shows</p>
+<blockquote>
+<p>Values imply a unit misread — treat this splice instant as unsafe.</p>
+</blockquote>
+<p>Do not air a splice flagged that way without confirming the encoder&#39;s units.</p>
+<h3 id="absolute-timestamps">Absolute timestamps</h3>
+<p>A MOM&#39;s timestamp structure has a <code>time_type</code> of <strong>None</strong>, <strong>UTC</strong>, <strong>VITC</strong> or
+<strong>GPI</strong>. Anything other than <code>None</code> means the splice names an <strong>absolute
+instant</strong> rather than one relative to the message&#39;s arrival, and the card says so
+loudly:</p>
+<blockquote>
+<p>ABSOLUTE (Utc) — a delay invalidates this cue</p>
+</blockquote>
+<p>This is the field that matters in a delayed path. A relative cue survives a
+delay: it still means &quot;splice N milliseconds after this message&quot;. An absolute
+cue does not — it names a wall-clock time, a VITC timecode or a GPI edge that has
+already passed by the time the delayed programme reaches air. Upstream has to be
+told to send relative cues, or the splice has to be re-timed downstream.</p>
+<p>(An unrecognised <code>time_type</code> invalidates the whole message rather than being
+ignored, because the timestamp is variable-length: without knowing its size the
+decoder cannot locate <code>num_ops</code>, and every subsequent field would be read from
+the wrong offset.)</p>
+<hr>
+<h2 id="10-command-reference">10. Command reference</h2>
+<p>The release binary is linked as a Windows GUI application so that
+double-clicking it does not flash up a console window. It re-attaches to the
+console that launched it before its first write, so <strong>run it from a terminal</strong>
+when you want <code>--list</code>, <code>--probe</code> or <code>--analyse</code> output — launched any other way
+there is no console for the output to reach.</p>
+<h3 id="flags">Flags</h3>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Argument</th>
+<th>Default</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>--source</code></td>
+<td><code>&lt;NAME&gt;</code></td>
+<td>—</td>
+<td>Launch the GUI and connect to the first discovered source whose name contains <code>NAME</code> (case-insensitive). The fragment waits until discovery resolves it, so starting before the source is up simply attaches when it appears.</td>
+</tr>
+<tr>
+<td><code>--list</code></td>
+<td>—</td>
+<td>—</td>
+<td>Wait 3 seconds for discovery, print <code>name&lt;TAB&gt;url</code> for every source found, exit. Prints <code>No NDI sources found.</code> if there are none.</td>
+</tr>
+<tr>
+<td><code>--probe</code></td>
+<td><code>&lt;NAME&gt;</code></td>
+<td>—</td>
+<td>Headless. Wait up to 10 seconds for a source matching <code>NAME</code>, connect, measure, print a full report, exit. Fails with a non-zero exit if the source never appears.</td>
+</tr>
+<tr>
+<td><code>--seconds</code></td>
+<td><code>&lt;N&gt;</code></td>
+<td><code>10</code></td>
+<td>How long <code>--probe</code> measures for. Loudness needs at least a few seconds; integrated loudness and LRA want 30 or more.</td>
+</tr>
+<tr>
+<td><code>--record</code></td>
+<td><code>&lt;FILE&gt;</code></td>
+<td>—</td>
+<td>Write per-frame metadata to <code>FILE</code> as JSON Lines. Combines with <code>--probe</code> or with a GUI launch.</td>
+</tr>
+<tr>
+<td><code>--analyse</code></td>
+<td><code>&lt;FILE&gt;</code></td>
+<td>—</td>
+<td>Read a recording back, print the arrival-timing report (<a href="#reading-the-analysis-report">§8</a>), exit. <code>--analyze</code> is accepted too.</td>
+</tr>
+<tr>
+<td><code>-h</code>, <code>--help</code></td>
+<td>—</td>
+<td>—</td>
+<td>Print the help text and exit.</td>
+</tr>
+</tbody></table>
+<p>Flags take the following argument, so quote names containing spaces. With no
+flags at all, the GUI opens with nothing connected.</p>
+<h3 id="examples">Examples</h3>
+<p>Find out what is on the network:</p>
+<pre><code>cloudcast-scope --list
+</code></pre>
+<p>Open the GUI already connected, and start recording immediately:</p>
+<pre><code>cloudcast-scope --source &quot;Camera 1&quot;
+cloudcast-scope --source &quot;Decoder&quot; --record run.jsonl
+</code></pre>
+<p>Capture evidence of an intermittent fault at 3 am without anyone sitting in
+front of a screen — this is what <code>--probe</code> exists for:</p>
+<pre><code>cloudcast-scope --probe &quot;Studio 2&quot; --seconds 300 --record studio2.jsonl &gt; studio2.txt
+</code></pre>
+<p><code>--probe</code> prints the same measurements the GUI shows, grouped as
+<code>format</code> / <code>-- timing --</code> / <code>-- video --</code> / <code>-- audio --</code> / <code>-- scte --</code>, one
+line per channel for audio (peak, true peak, RMS, DC, plus <code>SILENT</code> and
+<code>n CLIPS</code> markers). It is plain text and greps cleanly.</p>
+<p>Then, back at a desk:</p>
+<pre><code>cloudcast-scope --analyse studio2.jsonl
+</code></pre>
+<hr>
+<h2 id="11-scope-on-the-web">11. Scope on the web</h2>
+<p>Everything in this manual so far describes the desktop application. The same
+analysers can also be watched from a browser on your network: the same
+numbers, the same scopes and meters, the same reports, arranged as dashboards
+you build by dragging widgets onto a grid.</p>
+<p>It is the same program. The browser is not running its own copy of anything —
+it is watching the sessions this machine is already analysing, so what you see
+in a browser and what you see on the desktop are the same measurements of the
+same frames.</p>
+<h3 id="turning-it-on">Turning it on</h3>
+<p><strong>Top bar → API.</strong> Choose whether it should be reachable by <em>this computer
+only</em> or by the <em>network</em>, set a port (8760 by default), and turn it on. For
+network access, tick <strong>Require a bearer token</strong> — the window will generate one
+for you, and it is what stops anyone who can reach the machine from watching
+your plant.</p>
+<p>Tick <strong>Turn on when CloudCast Scope starts</strong> to have it come up with the
+application.</p>
+<p>You can also run the server on its own, without the desktop application:</p>
+<pre><code>cloudcast-api --listen 192.168.1.80:8760 --token s3cret
+</code></pre>
+<p>Either way the web UI, the REST API, the OpenAPI document and the MCP endpoint
+are all served from the same port.</p>
+<h3 id="opening-it">Opening it</h3>
+<p>Open <code>http://&lt;this machine&gt;:8760/ui/</code> in a browser. The API window lists the
+addresses that will work and will copy one for you.</p>
+<p><img src="img/web-ndi-scopes.png" alt="The NDI Scopes dashboard in a browser: alarms, waveform, vectorscope, RGB parade, luma histogram and the video readouts, all live"></p>
+<p>The first time, it asks for a name. It is not a login: with no accounts on a
+LAN, the name is simply where your dashboards are kept, so your layout follows
+you between machines and someone else&#39;s does not overwrite it. If the server
+requires a token, the page asks for that too and remembers it in the browser.</p>
+<p>Sessions started anywhere appear everywhere. An NDI source you are monitoring
+on the desktop shows up in the browser&#39;s session list; a stream someone starts
+from a browser appears in the desktop application&#39;s session list. Whoever
+started a session is the only one who can stop it over the API — the desktop
+can stop anything.</p>
+<h3 id="dashboards-and-presets">Dashboards and presets</h3>
+<p>A dashboard is a grid of widgets. Drag one out of the drawer, drop it where you
+want it, drag its corner to resize. Changes save to the server under your name
+as you make them.</p>
+<p><img src="img/web-aoip.png" alt="The AoIP dashboard: the flows on this VLAN, the selected stream's arrival and PTP-alignment plots, its meters and its waveform"></p>
+<p>The preset menu builds a ready-made dashboard for each tab of the desktop
+application — NDI Scopes, Audio, Timing, SCTE-104, Measurement run and
+Overview; AoIP, Packets, Clocks and the plant report; every HLS tab; plus SRT
+capture, where you upload a <code>.pcap</code> and get the same report the command-line
+tool produces. They are a starting point: rearrange them and they stay
+rearranged.</p>
+<p>Widgets follow the dashboard&#39;s chosen session rather than a fixed session id,
+so a dashboard keeps working after a source is restarted.</p>
+<p>The clocks view is the one to reach for when audio is glitching and nobody can
+say why: the PTP grandmaster&#39;s behaviour, the Livewire clock&#39;s cadence against
+an ideal 0.25 ms grid, and every source&#39;s media clock measured against the
+grandmaster.</p>
+<p><img src="img/web-aoip-clocks.png" alt="The AoIP Clocks dashboard: PTP phase, Livewire cadence residual and its distribution, Livewire against the PTP grandmaster, and each source's media-clock error"></p>
+<p>For HLS, each desktop tab has its dashboard: the findings with their remedies,
+the segment window, the timeline, the decoded audio, and the SCTE-35 breaks
+with the reason a consumer fires twice on one break.</p>
+<p><img src="img/web-hls-summary.png" alt="The HLS Summary dashboard: findings ranked by severity with what each one affects, and the variants of the master playlist"></p>
+<p><img src="img/web-hls-scte35.png" alt="The SCTE-35 dashboard: reconstructed ad breaks, what triggered each one, and the raw markers behind them"></p>
+<p><img src="img/web-hls-audio.png" alt="The HLS Audio dashboard: the latest decoded segment's meters, spectrum and loudness, with per-segment integrated LUFS and true peak"></p>
+<p>An SRT capture is analysed the same way, whether you upload it or point at a
+file already on the host. Only SRT headers are read, never payload, so an
+encrypted stream analyses exactly as well as a clear one.</p>
+<p><img src="img/web-srt.png" alt="The SRT capture dashboard, showing the report from an analysed .pcap"></p>
+<h3 id="picture-and-listen">Picture and listen</h3>
+<p>Two widgets cost real bandwidth, so they are strictly on demand.</p>
+<p><strong>Picture</strong> shows the video as a JPEG monitor, with its own size and quality
+controls. Nothing is scaled or encoded until the widget is on screen, and it
+stops as soon as it scrolls away. At its default 640 px and 10 frames a second
+it is about 85 KB/s.</p>
+<p><img src="img/web-ndi-picture.png" alt="The Picture dashboard: a JPEG monitor of the source with its own size and quality controls, beside the audio meters and the listener"></p>
+<p><strong>Listen</strong> plays the audio: the NDI source&#39;s first pair, or the AoIP stream the
+meters are following. Nothing is captured or sent until you press Listen.
+Audio is sent as plain 16-bit PCM — no codec, so no codec delay — which is
+about 190 KB/s for a loud stereo 48 kHz stream and far less when it is quiet.
+Choose a jitter buffer between 40 and 200 ms; 80 ms is a good starting point on
+a wired network. The widget shows how much audio is buffered, the round trip to
+the server, and any underruns.</p>
+<p>Audio has its own dashboard, with the meters, loudness, phase correlation and
+spectrum the desktop shows.</p>
+<p><img src="img/web-ndi-audio.png" alt="The NDI Audio dashboard: per-channel meters, EBU R128 loudness, phase correlation and the spectrum"></p>
+<p>A measurement run can be started from the browser as well as the desktop. It
+records every frame&#39;s arrival for the time you choose, then reports how a
+deadline-paced output would have coped.</p>
+<p><img src="img/web-ndi-run.png" alt="A finished measurement run in the browser: "Well clocked, 0.00% deadline emissions", with frame counts, measured rate, arrival interval and timecode"></p>
+<h3 id="discovery">Discovery</h3>
+<p>The Discovery dashboard shows what the network announces about itself over
+mDNS — NDI sources, Dante and Ravenna devices, NMOS registries — with the host
+and port each one resolves to, which box announced it, and anything wrong:
+two devices claiming one name, a host name with two addresses, an instance
+whose target never announced an address.</p>
+<p><img src="img/web-discovery.png" alt="The Discovery dashboard: every service instance on the VLAN with its family, host, port, address and TXT record"></p>
+<p>Listening is passive and costs the network nothing. Pressing <strong>Ask</strong> sends a
+single browse query, which is the only thing here that puts a packet on the
+wire — and on a quiet VLAN it is usually what turns an empty list into a full
+one.</p>
+<h3 id="who-can-reach-it">Who can reach it</h3>
+<p>Scope on the web is built for a plant network. There is no TLS and there are no
+accounts: a bearer token gates access and that is the whole security model.
+That is a sensible trade on a LAN and a poor one on the open internet.</p>
+<p>The server therefore tells you what it is bound to. If it is reachable from the
+network with no token, or if this machine holds a publicly routable address and
+the server is bound to all interfaces, it says so on start-up, in the API
+window, and across the top of the web UI itself. If you need Scope off-site,
+put it behind a VPN rather than opening the port.</p>
+<p>Anyone with the token can use any name, so names are convenience, not security.</p>
+<h3 id="what-it-costs">What it costs</h3>
+<p>The server only produces data someone is looking at. A widget that scrolls off
+screen unsubscribes; a browser tab that is hidden drops every subscription and
+then the socket. With nothing subscribed, the analysers skip the work
+altogether — an NDI source costs 1.65 ms a frame with nobody watching the
+scopes and 2.6 ms with.</p>
+<p>Each frame is serialised once and sent to every browser watching it, so more
+viewers cost far less than you would expect. Measured on the lab machine with
+the NDI Scopes set (nine topics, 121 KB/s each) on a 960×540p25 source:</p>
+<table>
+<thead>
+<tr>
+<th>Browsers</th>
+<th>Server CPU for the streaming</th>
+<th>Per browser</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>5.8% of one core</td>
+<td>58 ms/s</td>
+</tr>
+<tr>
+<td>2</td>
+<td>7.2%</td>
+<td>36 ms/s</td>
+</tr>
+<tr>
+<td>5</td>
+<td>8.6%</td>
+<td>17 ms/s</td>
+</tr>
+<tr>
+<td>10</td>
+<td>8.4%</td>
+<td>8 ms/s</td>
+</tr>
+</tbody></table>
+<p>Ten browsers cost about one and a half times what one costs, not ten times.</p>
+<p>The page follows the browser&#39;s light or dark setting, and a switch in the top
+bar overrides it.</p>
+<p><img src="img/web-light-theme.png" alt="The same dashboard in the light theme">
+The session&#39;s own analysis — which happens whether or not anyone is watching —
+was another 7 to 9% of a core.</p>
+<hr>
+<h2 id="12-troubleshooting">12. Troubleshooting</h2>
+<h3 id="no-sources-found">No sources found</h3>
+<p>The source list stays on <em>Discovering…</em>, or <code>--list</code> prints
+<code>No NDI sources found.</code></p>
+<ol>
+<li><strong>Is the NDI Runtime installed?</strong> If it is not, the application does not
+start at all — it exits reporting <code>NDI runtime not found</code> and listing every
+path it tried (<a href="#where-the-runtime-is-found">§1</a>). A window that opens but
+finds nothing is a discovery problem, not a runtime problem.</li>
+<li><strong>Is anything actually sending?</strong> Check with another NDI tool on the same
+machine. If nothing else can see the source either, the problem is upstream.</li>
+<li><strong>Firewall.</strong> NDI discovery is mDNS on UDP 5353 plus TCP for the streams
+themselves. A host firewall that blocks inbound mDNS will show an empty list
+on a network that is otherwise fine. Scope itself installs no firewall rule
+and needs none for outbound connections, but the runtime&#39;s discovery has to
+be allowed.</li>
+<li><strong>Different subnet.</strong> mDNS does not cross a router. Sources on another VLAN
+will never appear by discovery alone — they need an NDI Discovery Server, or
+the sender&#39;s machine and this one need to share a subnet.</li>
+<li><strong>The wrong adapter.</strong> A machine with several NICs (a media VLAN, a corporate
+VLAN, a VPN, WiFi) may be discovering on the wrong one. Configure the NDI
+runtime&#39;s adapter settings through NDI Tools&#39; Access Manager.</li>
+<li><strong>Give it a moment.</strong> Discovery is continuous but announcement-driven;
+<code>--list</code> waits 3 seconds, which is usually but not always enough on a busy
+network. The GUI keeps looking indefinitely.</li>
+</ol>
+<h3 id="not-connected-or-no-picture">Not connected or no picture</h3>
+<p><img src="img/05-not-connected.png" alt="The window with no source selected"></p>
+<p>Three distinct states, and the title-bar dot tells them apart:</p>
+<ul>
+<li><strong>Dark grey dot, <code>not connected</code>, centre pane reads <em>Select a source</em>.</strong>
+Nothing has been selected. Click a name in the list.</li>
+<li>*<em>Amber dot, source name shown, centre pane reads <em>Waiting for video…</em>.</em>*
+A receiver exists but no sender is connected to it (<code>Connections</code> on the
+Timing tab reads 0). The source was advertised but is not delivering — it has
+gone away since it was announced, is refusing the connection, or is reachable
+for discovery but not for the stream (a routing or firewall asymmetry).</li>
+<li><strong>Green dot but still no picture.</strong> Check the <strong>Picture</strong> checkbox in the title
+bar — the pane reads <em>Picture hidden</em> when it is off. Then check the
+bandwidth: <strong>Audio only</strong> delivers no video by design. If neither explains it,
+the sender may be connected but idle — see
+<a href="#connected-but-no-frames-arrive">below</a>.</li>
+</ul>
+<p>A red error line at the bottom of the source panel means the receiver could not
+be created at all; the message is the runtime&#39;s own.</p>
+<h3 id="connected-but-no-frames-arrive">Connected but no frames arrive</h3>
+<p>A source is listed, the dot is <strong>green</strong>, <code>Connections</code> reads 1 — and nothing is
+happening. This is a real and easily-misread state: an NDI sender can advertise
+itself and accept a connection while delivering no frames at all. The connection
+indicator says a TCP session exists, not that media is flowing.</p>
+<p>The signature on the Timing tab:</p>
+<ul>
+<li><code>connections 1</code> — the sender accepted the connection;</li>
+<li><code>measured fps 0.000</code> — nothing has arrived to time;</li>
+<li>the video frame count stuck at 1 (or 0) and not moving;</li>
+<li>jitter mean, peak and standard deviation all exactly zero, because there are
+no intervals to measure.</li>
+</ul>
+<p>This was observed on a live SRT decoder&#39;s NDI output whose own input had gone
+away: the decoder kept its NDI sender up and kept accepting connections while
+producing nothing.</p>
+<p><strong>Trust the frame counters and the measured fps, not the connection dot.</strong> A
+green dot with a frozen frame count is a source that is not sending. Go and check
+whether the sender actually has an input — a decoder with no stream, a camera on
+standby, a switcher output not routed — rather than looking for a network fault
+between it and here, because the network is plainly working: the connection was
+made.</p>
+<p>A near relative of this state is the source that is connected and <em>barely</em>
+sending — a frame a second against a declared 30 — which looks alive enough to
+fool a glance at the picture pane. To capture either as evidence rather than an
+impression, press <strong>Measure</strong> with a 30 s duration and read the Report tab: the
+run ends on time even though the frames have stopped, and the headline names the
+starvation numerically. <a href="#reading-a-report-a-starved-source">§8</a> walks through
+exactly such a capture.</p>
+<h3 id="high-dropped-audio-counts">High dropped audio counts</h3>
+<p>Remember <a href="#dropped-frames">the units</a>: <code>0 video, 1214 audio</code> is zero video drops
+and 1214 audio drops, not &quot;0 of 1214&quot;.</p>
+<p>Audio dropping while video does not is usually about the monitor, not the
+source. Capture and analysis run on one thread; video analysis is the expensive
+part (~5 ms per 1080p UYVY frame, ~8 ms for BGRA, around 21 ms at 2160p), and
+audio frames are small and frequent, so audio is what the receiver discards when
+that thread falls behind. Confirm by looking at <strong>Queued audio</strong> on the Timing
+tab: a queue that sits deep and a rising drop count are the same story.</p>
+<p>What to do:</p>
+<ul>
+<li>Analysing every frame of a 2160p50 feed is not realistic on one core. Monitor
+it at <strong>Lowest</strong> bandwidth if you only need audio and timing — but read
+<a href="#bandwidth">§3</a> first, because that invalidates every video measurement — or
+use <strong>Audio only</strong>, which is the honest choice when audio is the subject.</li>
+<li>Close other work on the machine. This is a measurement tool; giving it a core
+is reasonable.</li>
+<li>If the drops matter as <em>evidence about the source</em>, take a measurement run
+instead (<a href="#making-a-measurement-run">§8</a>) — a 30 s or 1 min run analyses
+itself into the Report tab and describes the source rather than this
+monitor&#39;s thread budget. The <code>--analyse</code> verdict
+explicitly notes when the recorder itself logged drops, so some long gaps may
+be capture-side loss rather than sender behaviour.</li>
+</ul>
+<h3 id="unexpected-gamut-alarms">Unexpected GAMUT alarms</h3>
+<p>In rough order of likelihood:</p>
+<ol>
+<li><strong>The colour matrix is inferred wrong.</strong> Check the title bar. A source at 576
+lines or fewer is decoded as BT.601; anything taller as BT.709. A downscaled
+HD feed at, say, 960×540 that was encoded 709 will be decoded 601 and will
+flag heavily — tens of percent of the raster
+(<a href="#colour-matrix-inference">§5</a>).</li>
+<li><strong>Bandwidth is set to Lowest.</strong> The proxy is a different raster, separately
+encoded, and at 360 lines it also flips the matrix inference. Two reasons the
+number is meaningless. Switch to <strong>Highest</strong>.</li>
+<li><strong>The source is genuinely full-range RGB.</strong> A BGRA/RGBA graphics source with
+pure primaries in it is out of the 16…235 box on all three channels by
+definition — full-range red flags every pixel. That is a correct measurement
+of an incorrect signal for a studio-range path, and the fix is upstream.</li>
+<li><strong>A few hundred pixels on a clean picture.</strong> Expected, not a fault: 4:2:2
+chroma is shared across pixel pairs, so every hard colour transition produces
+a handful of genuinely out-of-gamut edge pixels. This is exactly why the
+alarm threshold is 0.1 % of the raster rather than one pixel.</li>
+<li><strong>The signal really is out of gamut.</strong> Look at the RGB parade — a genuine
+fault is visible as a trace pushing past the 16 or 235 graticule on one or
+more channels, and the vectorscope will show excursions past the target
+boxes.</li>
+</ol>
+<h3 id="unexpected-clip-alarms">Unexpected CLIP alarms</h3>
+<p>Read <a href="#clipping">§6 Clipping</a> first. The rule is <code>|x| ≥ 1.0</code>, so a genuine
+0 dBFS test tone reports clips continuously and the chip stays lit — that is
+correct behaviour and not a fault. Press <strong>Reset stats</strong> and watch whether the
+count climbs again: a static count is history, a climbing count is happening
+now. On programme material any clip count at all is worth chasing.</p>
+<h3 id="measurements-look-wrong-on-lowest-bandwidth">Measurements look wrong on Lowest bandwidth</h3>
+<p>They are wrong, and the amber note under the bandwidth radio buttons says so:
+<em>Proxy — video measurements are not of the real feed.</em> At <code>Lowest</code> NDI delivers
+a separately-encoded ~640×360 proxy. Every video measurement — luma statistics,
+gamut counts, sharpness, black and freeze detection, the letterbox geometry and
+all four scopes — then describes the proxy. Audio and arrival timing are still
+valid. Switch to <strong>Highest (full analysis)</strong> for anything you intend to act on;
+note that the change reconnects and restarts the cumulative counters.</p>
+<hr>
+<p><em>Figures in this revision were captured from a pre-release build whose window
+was still titled &quot;NDI Monitor&quot;; the title bar now reads &quot;CloudCast Scope&quot;.
+Figures for the Audio, Timing and SCTE tabs are still to be taken and should be
+captured against a live source carrying audio and cues.</em></p>
+
+</main>
+</div>
+</body>
+</html>
