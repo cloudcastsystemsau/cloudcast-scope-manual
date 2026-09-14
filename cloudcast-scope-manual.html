@@ -242,10 +242,16 @@
 </nav>
 <main>
 <h1>CloudCast Scope User Manual</h1>
-<p><strong>CloudCast Scope</strong> is a signal monitor and analyser for NDI®. It connects to a
-source on the network and measures it the way a rack of broadcast test gear
-would: picture, waveform, RGB parade, vectorscope, luma histogram, per-channel
-audio metering, EBU R128 loudness, stream timing, and SCTE-104 cue decoding.</p>
+<p><strong>CloudCast Scope</strong> is a broadcast signal monitor and analyser. It measures
+NDI® the way a rack of test gear would — picture, waveform, RGB parade,
+vectorscope, luma histogram, per-channel audio metering, EBU R128 loudness,
+stream timing and SCTE-104 cues — and it measures the rest of the plant with
+the same seriousness: <strong>SRT</strong> links from a packet capture, <strong>HLS</strong> manifests
+against the media they describe, <strong>AES67 and Livewire</strong> audio-over-IP with
+<strong>PTP</strong>, the Livewire clocks, advertisements, multicast <strong>GPIO</strong> and <strong>SAP</strong>
+session announcements, and <strong>mDNS / DNS-SD</strong> discovery — what a VLAN announces
+about itself, including NMOS registries and nodes where they announce
+themselves.</p>
 <p>It also does one thing a rack of test gear cannot. It can <strong>record the arrival
 time of every frame</strong> to a file and replay that file offline through a
 downstream pacer&#39;s rules, which is how you tell the difference between a source
@@ -253,9 +259,11 @@ that is losing frames and a source that is delivering them in bursts. Those two
 faults look identical on a dropped-frame counter and completely different
 downstream. That is <a href="#8-recording-and-offline-analysis">§8</a>, and it is the
 reason this tool exists.</p>
-<p>One native binary, and no service to install. The same analysis runs from the
-GUI, from a headless <code>--probe</code> over SSH, and offline from <code>--analyse</code> — and,
-when you turn it on, from a browser on your network (<a href="#14-scope-on-the-web">§11</a>).</p>
+<p>No service to install, and nothing measured that you cannot get at
+programmatically. The same analysis runs from the GUI, from a headless
+<code>--probe</code> over SSH, offline from <code>--analyse</code>, over a <strong>REST API</strong> with an
+OpenAPI document, from an <strong>agent over MCP</strong>, and — when you turn it on —
+from a browser on your network (<a href="#14-scope-on-the-web">§14</a>).</p>
 <blockquote>
 <p>NDI® is a registered trademark of Vizrt NDI AB; CloudCast Scope is not
 affiliated with or endorsed by Vizrt; it contains no NDI SDK code and uses the
@@ -264,8 +272,11 @@ separately-installed NDI Runtime.</p>
 <p>© Cloudcast Systems PTY LTD. Licensed MIT.</p>
 <hr>
 <h2 id="1-what-cloudcast-scope-is">1. What CloudCast Scope is</h2>
-<p>A confidence and fault-finding monitor for NDI sources. Point it at a source and
-it tells you, continuously and numerically:</p>
+<p>A confidence and fault-finding monitor for a broadcast plant. Most of this
+manual is about NDI, which is where it started; the later chapters cover the
+audio-over-IP VLAN (<a href="#10-audio-over-ip">§10</a>), HLS (<a href="#11-hls">§11</a>) and SRT
+(<a href="#12-srt">§12</a>).</p>
+<p>Point it at an NDI source and it tells you, continuously and numerically:</p>
 <ul>
 <li>whether the picture is legal (levels, gamut), present (black, freeze) and
 sharp;</li>
@@ -277,7 +288,8 @@ claims;</li>
 <p>Everything it measures, it measures from the <strong>full-resolution frame</strong>. The
 picture on screen is downscaled for cheap texture upload; no measurement is ever
 taken from that downscale.</p>
-<p>The same analysis is reachable three ways:</p>
+<p>The same analysis is reachable several ways, and every one of them reports the
+same numbers:</p>
 <table>
 <thead>
 <tr>
@@ -301,7 +313,26 @@ taken from that downscale.</p>
 <td><code>cloudcast-scope --analyse capture.jsonl</code></td>
 <td>Read back a recording made earlier (<a href="#8-recording-and-offline-analysis">§8</a>).</td>
 </tr>
+<tr>
+<td>REST API</td>
+<td><code>cloudcast-api</code></td>
+<td>Every analyser as an HTTP call, with an OpenAPI document and Swagger UI built into the binary (<a href="#14-scope-on-the-web">§14</a>).</td>
+</tr>
+<tr>
+<td>Agents</td>
+<td><code>cloudcast-api --stdio</code></td>
+<td>The same tools over MCP, so an assistant can scan a VLAN or analyse a stream when you ask it to.</td>
+</tr>
+<tr>
+<td>Browser</td>
+<td><code>http://host:8760/ui/</code></td>
+<td>The same analysers as dashboards you build by dragging widgets onto a grid (<a href="#14-scope-on-the-web">§14</a>).</td>
+</tr>
 </tbody></table>
+<p>The other analysers have their own command-line tools — <code>cloudcast-aoip</code>,
+<code>cloudcast-hls</code>, <code>cloudcast-srt</code> and <code>cloudcast-discover</code> — and none of them
+needs the NDI runtime, which matters because the machine where SRT is received
+or the audio VLAN terminates is usually not the machine monitoring NDI.</p>
 <h3 id="requirements">Requirements</h3>
 <ul>
 <li><strong>The NDI Runtime, version 5 or 6.</strong> This is <em>not</em> the NDI SDK. CloudCast
@@ -311,9 +342,14 @@ NDI-aware applications, so a machine that already runs NDI Studio Monitor,
 a switcher or an encoder almost certainly has it.</li>
 <li><strong>Windows x64</strong> for the supplied MSI. The code itself is portable; the
 installer is not.</li>
-<li>Nothing else. No .NET, no browser, no service account, no firewall rule —
-Scope only makes outbound NDI connections and receives on the ephemeral ports
-the NDI runtime&#39;s own discovery already accounts for.</li>
+<li>Nothing else for the NDI application. No .NET, no service account, and no
+firewall rule: Scope only makes outbound NDI connections and receives on the
+ephemeral ports the NDI runtime&#39;s own discovery already accounts for.
+Turning on the API to reach it from a browser or an agent does open a
+listening port, and that is the one case where a firewall rule is needed
+(<a href="#14-scope-on-the-web">§14</a>).</li>
+<li><strong>ffmpeg on PATH</strong> only if you want HLS audio decoded (<a href="#11-hls">§11</a>).
+Everything else is self-contained.</li>
 </ul>
 <p>Without the runtime the application will not start: it exits with
 <code>NDI runtime not found. Install the NDI Runtime or NDI Tools. Tried: …</code>
