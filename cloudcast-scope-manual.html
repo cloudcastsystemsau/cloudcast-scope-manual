@@ -204,10 +204,26 @@
 <a class="toc-h3" href="#the-two-rails">The two rails</a>
 <a class="toc-h3" href="#splice-fields">Splice fields</a>
 <a class="toc-h3" href="#absolute-timestamps">Absolute timestamps</a>
-<a class="toc-h2" href="#10-command-reference">10. Command reference</a>
+<a class="toc-h2" href="#10-audio-over-ip">10. Audio over IP</a>
+<a class="toc-h3" href="#flows">Flows</a>
+<a class="toc-h3" href="#what-a-stream-analysis-says">What a stream analysis says</a>
+<a class="toc-h3" href="#clocks">Clocks</a>
+<a class="toc-h3" href="#what-is-on-this-vlan">What is on this VLAN</a>
+<a class="toc-h3" href="#from-the-command-line">From the command line</a>
+<a class="toc-h2" href="#11-hls">11. HLS</a>
+<a class="toc-h3" href="#findings">Findings</a>
+<a class="toc-h3" href="#the-timeline">The timeline</a>
+<a class="toc-h3" href="#scte-35-and-why-a-break-fires-twice">SCTE-35 and why a break fires twice</a>
+<a class="toc-h3" href="#audio">Audio</a>
+<a class="toc-h3" href="#recording-and-replaying">Recording and replaying</a>
+<a class="toc-h3" href="#from-the-command-line">From the command line</a>
+<a class="toc-h2" href="#12-srt">12. SRT</a>
+<a class="toc-h3" href="#what-it-reports">What it reports</a>
+<a class="toc-h3" href="#in-the-browser">In the browser</a>
+<a class="toc-h2" href="#13-command-reference">13. Command reference</a>
 <a class="toc-h3" href="#flags">Flags</a>
 <a class="toc-h3" href="#examples">Examples</a>
-<a class="toc-h2" href="#11-scope-on-the-web">11. Scope on the web</a>
+<a class="toc-h2" href="#14-scope-on-the-web">14. Scope on the web</a>
 <a class="toc-h3" href="#turning-it-on">Turning it on</a>
 <a class="toc-h3" href="#opening-it">Opening it</a>
 <a class="toc-h3" href="#dashboards-and-presets">Dashboards and presets</a>
@@ -215,7 +231,7 @@
 <a class="toc-h3" href="#discovery">Discovery</a>
 <a class="toc-h3" href="#who-can-reach-it">Who can reach it</a>
 <a class="toc-h3" href="#what-it-costs">What it costs</a>
-<a class="toc-h2" href="#12-troubleshooting">12. Troubleshooting</a>
+<a class="toc-h2" href="#15-troubleshooting">15. Troubleshooting</a>
 <a class="toc-h3" href="#no-sources-found">No sources found</a>
 <a class="toc-h3" href="#not-connected-or-no-picture">Not connected or no picture</a>
 <a class="toc-h3" href="#connected-but-no-frames-arrive">Connected but no frames arrive</a>
@@ -239,7 +255,7 @@ downstream. That is <a href="#8-recording-and-offline-analysis">§8</a>, and it 
 reason this tool exists.</p>
 <p>One native binary, and no service to install. The same analysis runs from the
 GUI, from a headless <code>--probe</code> over SSH, and offline from <code>--analyse</code> — and,
-when you turn it on, from a browser on your network (<a href="#11-scope-on-the-web">§11</a>).</p>
+when you turn it on, from a browser on your network (<a href="#14-scope-on-the-web">§11</a>).</p>
 <blockquote>
 <p>NDI® is a registered trademark of Vizrt NDI AB; CloudCast Scope is not
 affiliated with or endorsed by Vizrt; it contains no NDI SDK code and uses the
@@ -792,7 +808,7 @@ correlation meter and the spectrum. Analysis adapts automatically to the
 sender&#39;s channel count and sample rate — including 44.1 kHz and 96 kHz, which
 NDI senders emit freely.</p>
 <p><em>A figure of the Audio tab is not included in this revision; see the note at the
-end of <a href="#12-troubleshooting">§11</a>.</em></p>
+end of <a href="#15-troubleshooting">§11</a>.</em></p>
 <h3 id="channel-meters">Channel meters</h3>
 <p>One bar per channel, scaled 0 to −60 dBFS with key graticule lines at 0 and −18.
 Each bar carries four things:</p>
@@ -983,7 +999,7 @@ is), or a stuck tone.</p>
 frames arrive, or read from the receiver&#39;s own counters. Nothing here depends on
 the sender&#39;s timecode being correct — that is checked separately.</p>
 <p><em>A figure of the Timing tab is not included in this revision; see the note at
-the end of <a href="#12-troubleshooting">§11</a>.</em></p>
+the end of <a href="#15-troubleshooting">§11</a>.</em></p>
 <h3 id="frame-rate-and-jitter">Frame rate and jitter</h3>
 <table>
 <thead>
@@ -1327,7 +1343,7 @@ source that is plainly still alive on audio can be delivering nothing usable on
 video.</li>
 </ul>
 <p>This is also what the &quot;<a href="#connected-but-no-frames-arrive">connected but no frames arrive</a>&quot;
-failure in <a href="#12-troubleshooting">§11</a> looks like once you measure it instead of
+failure in <a href="#15-troubleshooting">§11</a> looks like once you measure it instead of
 watching it: connection up, timecode present, audio flowing, zero drops, and a
 video feed that is not there.</p>
 <h3 id="reading-the-analysis-report">Reading the analysis report</h3>
@@ -1834,7 +1850,226 @@ ignored, because the timestamp is variable-length: without knowing its size the
 decoder cannot locate <code>num_ops</code>, and every subsequent field would be read from
 the wrong offset.)</p>
 <hr>
-<h2 id="10-command-reference">10. Command reference</h2>
+<h2 id="10-audio-over-ip">10. Audio over IP</h2>
+<p>An audio-over-IP VLAN carries three conversations at once: a clock, some
+advertisements, and the audio itself. Most faults are in the first one and get
+blamed on the third. <strong>AoIP</strong> mode listens to all of it.</p>
+<p>Point it at the leg of the machine that sits on the audio VLAN — the interface
+picker lists the addresses this machine has — and press <strong>Start</strong>. Nothing is
+sent: it joins the multicast groups and reads. <code>--aoip</code> opens straight into it.</p>
+<p><img src="img/aoip-desktop.png" alt="The AoIP view: every flow on the VLAN, the selected stream's arrival and PTP-alignment plots, its meters and its report"></p>
+<h3 id="flows">Flows</h3>
+<p>The flow table is every multicast conversation heard, one row each, with what
+it is rather than just where it came from:</p>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>grandmaster</code>, <code>follower</code></td>
+<td>PTPv2 (IEEE 1588-2008), the clock AES67 runs on</td>
+</tr>
+<tr>
+<td><code>Dante clock</code></td>
+<td>PTPv1 (IEEE 1588-2002), which is <em>not</em> AES67&#39;s clock</td>
+</tr>
+<tr>
+<td><code>fast clock</code>, <code>slow clock</code></td>
+<td>The two Livewire clock streams</td>
+</tr>
+<tr>
+<td><code>advert</code></td>
+<td>A Livewire terminal announcing its sources</td>
+</tr>
+<tr>
+<td><code>RTP audio</code></td>
+<td>The audio, with the packet time it is really using</td>
+</tr>
+<tr>
+<td><code>session</code></td>
+<td>A SAP announcement carrying an SDP</td>
+</tr>
+</tbody></table>
+<p>The columns that matter are <code>pps</code>, <code>lost</code> and <code>jitter ms</code>. A Livewire fast
+clock runs at 8 000 packets a second and a standard AES67 stream at 1 000; a
+number well below that is the fault, and it is visible before anyone describes
+a symptom. <code>PEAK DBFS</code> says whether a stream that is arriving is also carrying
+anything — <code>silent</code> on a stream you can see arriving is a different problem
+from a stream that is not arriving.</p>
+<p>Selecting a flow fills the detail pane underneath: the full analysis of that
+stream, its arrival-gap plot, and its alignment against PTP.</p>
+<h3 id="what-a-stream-analysis-says">What a stream analysis says</h3>
+<p>The format is read off the wire, not assumed: channel count, sample size,
+packet time. Livewire live streams run at 0.25 ms, Livewire standard at 5 ms,
+AES67 at 1 ms — and a device configured for one while the receiver expects
+another is a common and confusing fault.</p>
+<p>Then the things a receiver actually cares about:</p>
+<ul>
+<li><strong>Loss, duplicates and reordering</strong>, separately. They have different causes
+and different fixes.</li>
+<li><strong>Timestamp continuity</strong> — whether the RTP timestamp advances by exactly the
+samples in each packet. A jump means the sender&#39;s media clock stepped.</li>
+<li><strong>Arrival distribution</strong> — mean, standard deviation and the worst case, plus
+a plot. A receiver&#39;s buffer has to cover the worst case, not the mean.</li>
+<li><strong>Arrival against timestamp</strong>, with PTP listening. This is the number that
+decides a receive buffer: how far behind its own timestamp each packet
+arrives, measured against the same clock the sender used.</li>
+</ul>
+<h3 id="clocks">Clocks</h3>
+<p>The <strong>Clocks</strong> tab is where to go when audio is glitching and nobody can say
+why.</p>
+<p><img src="img/aoip-clocks-desktop.png" alt="The Clocks view: PTP, the Livewire cadence residual against an ideal 0.25 ms grid, Livewire against the PTP grandmaster, and every source's media clock"></p>
+<p>It shows the PTP grandmaster&#39;s identity, priority, clock class, accuracy and
+time source, how regularly it is sending Announce and Sync, and the local
+clock&#39;s frequency offset against it in parts per million. Followers are listed
+with whether their Delay_Req is being answered.</p>
+<p>Below that, the Livewire clock: tick continuity, the RTP timestamp carried per
+tick, and the cadence residual against an ideal 0.25 ms grid. A widening band
+is the network; periodic structure is the master.</p>
+<p>Then the question that catches people out: <strong>is the Livewire master also the
+PTP grandmaster?</strong> On a plant running both, they must be the same device, and
+the view says so in one line.</p>
+<p>Finally, every source&#39;s media clock measured against the grandmaster, in ppm,
+with how far behind the grandmaster its packets arrive and how much that
+figure moves. A source drifting at tens of ppm will eventually slip a sample
+no matter how good the network is.</p>
+<h3 id="what-is-on-this-vlan">What is on this VLAN</h3>
+<p>The <strong>Plant report</strong> tab answers &quot;what is out there&quot; in one page of text you
+can paste into a ticket: every PTP master, every Livewire terminal with its
+sources and backfeeds, every SAP/AES67 session with its SDP details — the
+payload type, packet time, the reference clock it names and the media clock
+mode.</p>
+<p>Livewire terminals can be asked for a full advertisement rather than waited
+for, which turns a slow trickle into a complete list.</p>
+<h3 id="from-the-command-line">From the command line</h3>
+<pre><code>cloudcast-aoip scan   --iface 192.168.1.80 --seconds 15
+cloudcast-aoip ptp    --iface 192.168.1.80 --seconds 30 --active
+cloudcast-aoip clock  --iface 192.168.1.80
+cloudcast-aoip stream --iface 192.168.1.80 --group 239.70.67.70 --ptp
+</code></pre>
+<p><code>scan</code> is the plant report. <code>ptp</code> is the clock monitor on its own, and
+<code>--active</code> sends Delay_Req once a second so it measures path delay the way a
+follower would — the only part of this tool that transmits. <code>clock</code> is the
+Livewire pair. <code>stream</code> is one flow in full detail; <code>--ptp</code> adds the
+arrival-against-timestamp measurement.</p>
+<p><code>--interval N</code> prints an interim report every N seconds, which is what to use
+when you are waiting for something intermittent.</p>
+<p>The same analysers are available over the API and to an agent as
+<code>aoip_scan</code>, <code>aoip_ptp</code>, <code>aoip_clock</code> and <code>aoip_stream</code>, and in a browser
+(<a href="#14-scope-on-the-web">§14</a>).</p>
+<hr>
+<h2 id="11-hls">11. HLS</h2>
+<p>Manifest conformance is the easy part, and every validator does it. A stream
+can pass all of that and still not play properly, because the manifest is only
+a claim about the media. <strong>HLS</strong> mode reads the segments too and checks the
+claim.</p>
+<p>Three things are meant to agree:</p>
+<ul>
+<li>what <code>#EXTINF</code> says a segment lasts,</li>
+<li>what <code>#EXT-X-PROGRAM-DATE-TIME</code> says it maps to,</li>
+<li>and what the segment&#39;s own frame headers actually contain.</li>
+</ul>
+<p>Plus a fourth: the start time each segment declares — the ID3 <code>PRIV</code> timestamp
+for packed audio, the first PES PTS for MPEG-TS, <code>tfdt</code> for fMP4. If a segment
+says it begins where the previous one did not end, the timeline has a gap or an
+overlap at every boundary, and players disagree about what to do.</p>
+<p><img src="img/hls-desktop.png" alt="The HLS view: findings ranked by severity, each with what it affects and what to do"></p>
+<p>Enter a playlist URL and press <strong>Watch</strong> to follow a live stream, or
+<strong>Analyse</strong> for a one-off. A master playlist&#39;s variants are listed and any of
+them can be followed.</p>
+<h3 id="findings">Findings</h3>
+<p>Findings are the point. Each one carries a severity, <strong>what it affects</strong> —
+which is usually &quot;some players&quot; rather than &quot;the stream&quot; — and what to do
+about it. Tolerance differs: a discontinuity that Safari handles silently can
+stall another player, so findings say which.</p>
+<h3 id="the-timeline">The timeline</h3>
+<p>The timeline is the same information drawn rather than tabulated: declared
+duration against measured duration, the program-date-time line, and the gaps
+between what one segment ends at and the next begins at. A stream that drifts
+shows as a slope; a stream that jumps shows as a step.</p>
+<p><img src="img/hls-timeline-desktop.png" alt="The timeline: EXTINF against measured duration, PDT, and the gap at each segment boundary"></p>
+<h3 id="scte-35-and-why-a-break-fires-twice">SCTE-35 and why a break fires twice</h3>
+<p>Ad breaks are reconstructed from every carriage at once — <code>EXT-X-DATERANGE</code>,
+<code>EXT-X-CUE-OUT</code>/<code>IN</code>, <code>OATCLS</code>, <code>SPLICEPOINT</code> and in-band SCTE-35 in the
+transport stream — and matched into breaks with a start, a duration and an end.</p>
+<p>The column that earns its place is <strong>why it double-fires</strong>. A consumer counting
+starts will fire twice on one break if the break is signalled by two different
+tags at once, and that is a real and common way for an ad to run twice. The
+raw markers behind each break are listed underneath, with the splice command,
+event id, duration and whether the section&#39;s CRC is valid.</p>
+<p><img src="img/hls-scte-desktop.png" alt="SCTE-35 breaks with their pulse count, triggers and the reason a consumer fires more than once"></p>
+<h3 id="audio">Audio</h3>
+<p>With <code>--decode</code> (or the <strong>decode audio</strong> tick), each new segment is decoded
+with ffmpeg and measured: peak, true peak and EBU R128 loudness, per segment
+and as a trend. This is how you answer &quot;are the ads louder than the programme&quot;
+with a number rather than an opinion.</p>
+<p>ffmpeg must be on the host running the analysis.</p>
+<h3 id="recording-and-replaying">Recording and replaying</h3>
+<p>A live playlist can be recorded to a JSONL file and replayed later:</p>
+<pre><code>cloudcast-hls &lt;url&gt; --record watch.jsonl --seconds 600
+cloudcast-hls --analyse watch.jsonl
+</code></pre>
+<p>The recording holds every manifest as served, so a fault that happened at
+three in the morning can be analysed at nine, and the same analysis runs over
+it. <code>--with-segments</code> also fetches and times each new segment as it appears.</p>
+<h3 id="from-the-command-line">From the command line</h3>
+<pre><code>cloudcast-hls https://example.com/master.m3u8
+cloudcast-hls https://example.com/master.m3u8 -n 12 -d --poll 4
+cloudcast-hls ./local.m3u8 --quiet
+cloudcast-hls https://example.com/master.m3u8 --verdict
+</code></pre>
+<p><code>-n</code> sets how many segments to download, <code>-v</code> picks a variant, <code>-d</code> decodes
+audio, <code>-p</code> refetches a live playlist a few more times — cue identity over
+time needs more than one snapshot. <code>--quiet</code> prints only the findings and
+<code>--verdict</code> prints one line, which is what to put in a monitoring check.</p>
+<p>The same analysis is available over the API and to an agent as <code>hls_analyse</code>
+and <code>hls_replay</code>, and in a browser (<a href="#14-scope-on-the-web">§14</a>).</p>
+<hr>
+<h2 id="12-srt">12. SRT</h2>
+<p>When a contribution feed breaks up, the question is whether the transport or
+the source is at fault. SRT&#39;s own counters say <em>that</em> a link lost packets.
+They cannot say whether it was one outage or a thousand singletons, whether
+the retransmissions arrived in time to be used, or whether the sender or the
+path was to blame. Those need per-packet arrival times.</p>
+<p>So this works on a capture.</p>
+<pre><code>cloudcast-srt nuc.pcapng --port 8899
+cloudcast-srt --list-interfaces
+cloudcast-srt --live 12 --seconds 60 --keep nuc.pcapng --port 8899
+</code></pre>
+<p>Capture <strong>where the SRT is actually received</strong> — on the decoder box — because
+that is the only place the arrival times mean anything. <code>--live</code> captures and
+analyses in one step; <code>--list-interfaces</code> prints a numbered list, which is far
+easier than typing a Windows device GUID.</p>
+<p><strong>Only SRT headers are read, never payload</strong>, so an encrypted stream analyses
+exactly as well as a clear one, and a capture can be handed to someone else
+without handing over the content.</p>
+<p><img src="img/srt-desktop.png" alt="An analysed SRT capture: the report as the browser shows it — the desktop's SRT tab and the command line print the same thing"></p>
+<h3 id="what-it-reports">What it reports</h3>
+<ul>
+<li><strong>The handshake and the negotiated settings</strong>, including the latency the two
+ends agreed on. A link losing packets with a 120 ms buffer and a 200 ms path
+is not a network fault, it is a configuration one.</li>
+<li><strong>Round-trip time</strong> over the run, not just its average.</li>
+<li><strong>The shape of the loss.</strong> One outage of 400 packets and 400 single losses
+are the same number in a counter and completely different faults.</li>
+<li><strong>Whether retransmissions arrived in time to be used.</strong> A retransmission
+that arrives after its deadline is as lost as one that never came, and
+counters that report it as recovered are misleading.</li>
+<li><strong>One-way delay variation</strong>, from the sender&#39;s own timestamp in each data
+packet against arrival time. This is what separates a bursty sender from a
+congested path — the question aggregate counters cannot answer.</li>
+</ul>
+<h3 id="in-the-browser">In the browser</h3>
+<p>The same analysis is in the web UI: upload a <code>.pcap</code> or <code>.pcapng</code> (up to
+2 GiB, streamed to the host, analysed and deleted) or point at a file already
+on the host. That is usually the quickest route when the capture was taken on
+a machine in another building.</p>
+<p>The API and agent tool is <code>srt_analyse</code>.</p>
+<hr>
+<h2 id="13-command-reference">13. Command reference</h2>
 <p>The release binary is linked as a Windows GUI application so that
 double-clicking it does not flash up a console window. It re-attaches to the
 console that launched it before its first write, so <strong>run it from a terminal</strong>
@@ -1915,7 +2150,7 @@ line per channel for audio (peak, true peak, RMS, DC, plus <code>SILENT</code> a
 <pre><code>cloudcast-scope --analyse studio2.jsonl
 </code></pre>
 <hr>
-<h2 id="11-scope-on-the-web">11. Scope on the web</h2>
+<h2 id="14-scope-on-the-web">14. Scope on the web</h2>
 <p>Everything in this manual so far describes the desktop application. The same
 analysers can also be watched from a browser on your network: the same
 numbers, the same scopes and meters, the same reports, arranged as dashboards
@@ -2065,7 +2300,7 @@ bar overrides it.</p>
 The session&#39;s own analysis — which happens whether or not anyone is watching —
 was another 7 to 9% of a core.</p>
 <hr>
-<h2 id="12-troubleshooting">12. Troubleshooting</h2>
+<h2 id="15-troubleshooting">15. Troubleshooting</h2>
 <h3 id="no-sources-found">No sources found</h3>
 <p>The source list stays on <em>Discovering…</em>, or <code>--list</code> prints
 <code>No NDI sources found.</code></p>
